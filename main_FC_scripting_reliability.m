@@ -1,8 +1,19 @@
 %%
 % test-retest reliability using individual imprpved seeds/submasks
-fwFolder = 'C:\Users\smontero\OneDrive - Boston University\RS_MovieWatching\Rest_Movie_WorkingMemory\fw\';
-anatomFolder = 'C:\Users\smontero\OneDrive - Boston University\RS_MovieWatching\Rest_Movie_WorkingMemory\probe_10MPhotons\anatomical\';
-derivFolder = 'C:\Users\smontero\OneDrive - Boston University\RS_MovieWatching\Rest_Movie_WorkingMemory\derivatives\rsfc\';
+% mypwd=pwd;cd('../atlasviewer_repo/');setpaths;cd(mypwd);
+% mypwd=pwd;cd('../homer3_repo/');setpaths;cd(mypwd);
+clear all;
+if isunix()
+    fwFolder = '/projectnb/nphfnirs/s/DATA_BU/2022/Rest_Movie_WorkingMemory/DataRSFC_Analysis/fw/';
+    anatomFolder = '/projectnb/nphfnirs/s/DATA_BU/2022/Rest_Movie_WorkingMemory/DataRSFC_Analysis/probe_10MPhotons/anatomical/';
+    derivFolder = '/projectnb/nphfnirs/s/DATA_BU/2022/Rest_Movie_WorkingMemory/DataRSFC_Analysis/derivatives/';
+    dataDir = '/projectnb/nphfnirs/s/DATA_BU/2022/Rest_Movie_WorkingMemory/DataRSFC_Analysis/';
+end
+if ispc()
+    fwFolder = 'C:\Users\smontero\OneDrive - Boston University\RS_MovieWatching\Rest_Movie_WorkingMemory\fw\';
+    anatomFolder = 'C:\Users\smontero\OneDrive - Boston University\RS_MovieWatching\Rest_Movie_WorkingMemory\probe_10MPhotons\anatomical\';
+    derivFolder = 'C:\Users\smontero\OneDrive - Boston University\RS_MovieWatching\Rest_Movie_WorkingMemory\derivatives\rsfc\';
+end
 
 subjects_set = [1:7 9:16];
 BrainMaps_hbo =[];
@@ -21,7 +32,7 @@ flags.p_thresh = 0; % . p_thresh is used to plot r values below that p-val (use 
 flags.clusteringType = 1; %1:Matlab, 2:David's algorithm
 fOut_reliability=sprintf('reliability_imrecon-%s_gsr-%s_clust-%i',flags.imagerecon,flags.gsr,flags.clusteringType);
 fOut_imrecon_prefix =sprintf('imrecon-%s_gsr-%s_clust-%i',flags.imagerecon,flags.gsr,flags.clusteringType);
-pipelineDir = sprintf('%sPipeline-%s_gsr-%s_clust-%i\\',derivFolder,flags.imagerecon,flags.gsr,flags.clusteringType);
+pipelineDir = sprintf('%sPipeline-%s_gsr-%s_clust-%i/',derivFolder,flags.imagerecon,flags.gsr,flags.clusteringType);
 [dmn_mask,dan_mask,mesh_brain,idx_select] = Parcellation_FC(anatomFolder,fwFolder);
 if ~exist(pipelineDir,'dir')
     mkdir(pipelineDir);
@@ -34,8 +45,8 @@ if ~exist([pipelineDir,fOut_reliability,'.mat'],'file');
         fprintf('==============================\n');
         fprintf('Subject %s\n',subject);
         fprintf('==============================\n');
-        SnirfFilePathr1 = ['C:\Users\smontero\OneDrive - Boston University\RS_MovieWatching\Rest_Movie_WorkingMemory\sub-',subject,'\nirs\sub-',subject,'_task-RS_run-1_nirs.snirf'];
-        SnirfFilePathr2 = ['C:\Users\smontero\OneDrive - Boston University\RS_MovieWatching\Rest_Movie_WorkingMemory\sub-',subject,'\nirs\sub-',subject,'_task-RS_run-2_nirs.snirf'];
+        SnirfFilePathr1 = [dataDir,'Subj-',subject,'/nirs/sub-',subject,'_task-RS_run-1_nirs.snirf'];
+        SnirfFilePathr2 = [dataDir,'Subj-',subject,'/nirs/sub-',subject,'_task-RS_run-2_nirs.snirf'];
 
         %%-
         [snirfObjr1,dcObjr1,dodObjr1] = Preprocessing_FC(SnirfFilePathr1,flags);
