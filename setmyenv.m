@@ -2,7 +2,7 @@ function [fwFolder,anatomFolder,derivFolder,dataDir] = setmyenv()
 %Sets my environment (paths, etc.)
 %   Detailed explanation goes here
 if isunix()
-    maxNumCompThreads(16);
+    maxNumCompThreads(32);
     addpath('./cbrewer/');
     if isempty(which('AtlasViewerGUI'))
         mypwd=pwd;cd('../atlasviewer_repo/');setpaths;cd(mypwd);
