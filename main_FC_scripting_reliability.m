@@ -1,15 +1,19 @@
 %%
 % test-retest reliability using individual imprpved seeds/submasks
-% mypwd=pwd;cd('../atlasviewer_repo/');setpaths;cd(mypwd);
-% mypwd=pwd;cd('../homer3_repo/');setpaths;cd(mypwd);
 clear all;
+
+addpath('cbrewer\');
 if isunix()
+    mypwd=pwd;cd('../atlasviewer_repo/');setpaths;cd(mypwd);
+    mypwd=pwd;cd('../homer3_repo/');setpaths;cd(mypwd);
     fwFolder = '/projectnb/nphfnirs/s/DATA_BU/2022/Rest_Movie_WorkingMemory/DataRSFC_Analysis/fw/';
     anatomFolder = '/projectnb/nphfnirs/s/DATA_BU/2022/Rest_Movie_WorkingMemory/DataRSFC_Analysis/probe_10MPhotons/anatomical/';
     derivFolder = '/projectnb/nphfnirs/s/DATA_BU/2022/Rest_Movie_WorkingMemory/DataRSFC_Analysis/derivatives/';
     dataDir = '/projectnb/nphfnirs/s/DATA_BU/2022/Rest_Movie_WorkingMemory/DataRSFC_Analysis/';
 end
 if ispc()
+    mypwd = pwd;cd c:\Homer3_smh_repo\;setpaths;cd(mypwd);
+    mypwd = pwd;cd c:\AtlasViewer-2.18.1\;setpaths;cd(mypwd);
     fwFolder = 'C:\Users\smontero\OneDrive - Boston University\RS_MovieWatching\Rest_Movie_WorkingMemory\fw\';
     anatomFolder = 'C:\Users\smontero\OneDrive - Boston University\RS_MovieWatching\Rest_Movie_WorkingMemory\probe_10MPhotons\anatomical\';
     derivFolder = 'C:\Users\smontero\OneDrive - Boston University\RS_MovieWatching\Rest_Movie_WorkingMemory\derivatives\rsfc\';
@@ -198,3 +202,4 @@ xlabel({'Submasks Run2'});
 
 f.Position = [10         10        1049         507];
 saveas(f,[fOut_reliability,'.png']);
+close(f);
