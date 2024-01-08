@@ -92,20 +92,13 @@ end
 HbO_brain = [HbO(1:n_vox,:)]';
 HbR_brain = [HbR(1:n_vox,:)]';
 
-% Global signal regression in image space?
-if strcmp(flags.gsr,'image')
-    HbO_brain = GlobalRegression(HbO_brain);
-    HbR_brain = GlobalRegression(HbR_brain);
-end
+% if strcmp(flags.bpfilt,'image')
+%     HbO_bNoFilt = HbO_brain;
+%     HbR_bNoFilt = HbR_brain;
+% else
+%     HbO_bNoFilt = [];
+%     HbR_bNoFilt = [];
+% end
+
 end
 
-
-function Hb_brain = GlobalRegression(Hb_brain)
-A = mean(Hb_brain,1);
-A_inv = A'/(A*A');
-for i = 1:size(Hb_brain,1)
-    y = Hb_brain(i,:);
-    b = y*A_inv;
-    Hb_brain(i,:) = y - A*b;
-end
-end

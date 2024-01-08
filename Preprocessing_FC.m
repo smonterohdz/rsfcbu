@@ -1,4 +1,4 @@
-function [snirfObj,dc,dodBP] = Preprocessing_FC(fullPathSnirf,flags)
+function [snirfObj,dc,dod] = Preprocessing_FC(fullPathSnirf,flags)
 %Preprocessing_FC Performs fnirs preprocessing on channel space
 %   Detailed explanation goes here
 
@@ -26,32 +26,35 @@ mlActAuto = [];
 % Convert to dOD
 dod = hmrR_Intensity2OD( snirfObj.data );
 
+if strcmp(flags.macorrect,'spline')
+    % Find Motion Artifacts
+    % tIncAuto = hmrR_MotionArtifact(data, probe, mlActMan, mlActAuto, tIncMan, tMotion, tMask, STDEVthresh, AMPthresh)
+    tMotion = 0.5;
+    tMask = 0.5;
+    STDEVthresh = 40;
+    AMPthresh = 100;
+    %tIncAuto = hmrR_MotionArtifact(dod, snirfObj.probe, [], mlActAuto, [], tMotion, tMask, STDEVthresh, AMPthresh);
+    % By channel
+    % [tInc, tIncCh] = hmrR_MotionArtifactByChannel(data, probe, mlActMan, mlActAuto, tIncMan, tMotion, tMask, std_thresh, amp_thresh)
+    [tInc, tIncCh] = hmrR_MotionArtifactByChannel(dod, snirfObj.probe, [], mlActAuto, [], tMotion, tMask, STDEVthresh, AMPthresh);
 
-% Find Motion Artifacts
-% tIncAuto = hmrR_MotionArtifact(data, probe, mlActMan, mlActAuto, tIncMan, tMotion, tMask, STDEVthresh, AMPthresh)
-tMotion = 0.5;
-tMask = 0.5;
-STDEVthresh = 40;
-AMPthresh = 100;
-%tIncAuto = hmrR_MotionArtifact(dod, snirfObj.probe, [], mlActAuto, [], tMotion, tMask, STDEVthresh, AMPthresh);
-% By channel
-% [tInc, tIncCh] = hmrR_MotionArtifactByChannel(data, probe, mlActMan, mlActAuto, tIncMan, tMotion, tMask, std_thresh, amp_thresh)
-[tInc, tIncCh] = hmrR_MotionArtifactByChannel(dod, snirfObj.probe, [], mlActAuto, [], tMotion, tMask, STDEVthresh, AMPthresh);
+    % motion artifacts correction
+    p =0.99;
+    turnon = 1;
+    FrameSize_sec = 10;
+    %USAGE data_dod = hmrR_MotionCorrectSpline(data_dod, mlAct, tIncCh, p, turnon)
+    dod = hmrR_MotionCorrectSpline(dod, mlActAuto, tIncCh, p, turnon);
+    %USAGE function data_d = hmrR_MotionCorrectSplineSG(data_d, mlActAuto, p, FrameSize_sec, turnon)
+    %dod = hmrR_MotionCorrectSplineSG(dod, mlActAuto, p, FrameSize_sec, turnon);
+end
 
-% motion artifacts correction
-p =0.99;
-turnon = 1;
-FrameSize_sec = 10;
-%USAGE data_dod = hmrR_MotionCorrectSpline(data_dod, mlAct, tIncCh, p, turnon)
-dod = hmrR_MotionCorrectSpline(dod, mlActAuto, tIncCh, p, turnon);
-%USAGE function data_d = hmrR_MotionCorrectSplineSG(data_d, mlActAuto, p, FrameSize_sec, turnon)
-%dod = hmrR_MotionCorrectSplineSG(dod, mlActAuto, p, FrameSize_sec, turnon);
-
-% Band Pass Filter
-dodBP = hmrR_BandpassFilt( dod, 0.009, 0.080);
+if strcmp(flags.bpfilt,'channel')
+    % Band Pass Filter
+    dod = hmrR_BandpassFilt( dod, 0.009, 0.080);
+end
 
 % Convert to Conc
-dc = hmrR_OD2Conc( dodBP, snirfObj.probe, [1 1]);
+dc = hmrR_OD2Conc( dod, snirfObj.probe, [1 1]);
 
 % Global signal regression in image space?
 if strcmp(flags.gsr,'channel')
@@ -64,14 +67,4 @@ if strcmp(flags.gsr,'channel')
     dc.SetDataTimeSeries(d);
 end
 
-end
-
-function Hb_brain = GlobalRegression(Hb_brain)
-A = mean(Hb_brain,1);
-A_inv = A'/(A*A');
-for i = 1:size(Hb_brain,1)
-    y = Hb_brain(i,:);
-    b = y*A_inv;
-    Hb_brain(i,:) = y - A*b;
-end
 end

@@ -2,42 +2,21 @@
 % test-retest reliability using individual imprpved seeds/submasks
 clear all;
 
-
-if isunix()
-    maxNumCompThreads(16);
-    addpath('./cbrewer/');
-    if isempty(which('AtlasViewerGUI'))
-        mypwd=pwd;cd('../atlasviewer_repo/');setpaths;cd(mypwd);
-    end
-    if isempty(which('Homer3'))
-        mypwd=pwd;cd('../homer3_repo/');setpaths;cd(mypwd);
-    end
-    fwFolder = '/projectnb/nphfnirs/s/DATA_BU/2022/Rest_Movie_WorkingMemory/DataRSFC_Analysis/fw/';
-    anatomFolder = '/projectnb/nphfnirs/s/DATA_BU/2022/Rest_Movie_WorkingMemory/DataRSFC_Analysis/probe_10MPhotons/anatomical/';
-    derivFolder = '/projectnb/nphfnirs/s/DATA_BU/2022/Rest_Movie_WorkingMemory/DataRSFC_Analysis/derivatives/';
-    dataDir = '/projectnb/nphfnirs/s/DATA_BU/2022/Rest_Movie_WorkingMemory/DataRSFC_Analysis/';
-end
-if ispc()
-    addpath('./cbrewer/');
-    if isempty(which('Homer3'))
-        mypwd = pwd;cd X:\Homer3_smh_repo\;setpaths;cd(mypwd);
-    end
-    if isempty(which('AtlasViewerGUI'))
-        mypwd = pwd;cd X:\atlasViewer-repo\;setpaths;cd(mypwd);
-    end
-    fwFolder = 'C:\Users\smontero\OneDrive - Boston University\RS_MovieWatching\Rest_Movie_WorkingMemory\fw\';
-    anatomFolder = 'C:\Users\smontero\OneDrive - Boston University\RS_MovieWatching\Rest_Movie_WorkingMemory\probe_10MPhotons\anatomical\';
-    derivFolder = 'C:\Users\smontero\OneDrive - Boston University\RS_MovieWatching\Rest_Movie_WorkingMemory\derivatives\rsfc\';
-end
+[fwFolder,anatomFolder,derivFolder,dataDir] = setmyenv();
 
 subjects_set = [1:7 9:16];
+nSubjs=length(subjects_set);
 BrainMaps_hbo =[];
 BrainMaps_hbr = [];
-rDMNDAN_AllSubj_hbo = zeros(40,40,length(subjects_set));
-rDMNDAN_AllSubj_hbr = zeros(40,40,length(subjects_set));
-nSubjs=length(subjects_set);
+rDMNDAN_AllSubj_hbo = zeros(40,40,nSubjs);
+rDMNDAN_AllSubj_hbr = zeros(40,40,nSubjs);
+dmn_seeds_ts = zeros(size(HbO_brain_r1r2NoFilt,1),length(dmn_improv_hbo),2,nSubjs);
+dan_seeds_ts = zeros(size(HbO_brain_r1r2NoFilt,1),length(dan_improv_hbo),2,nSubjs);
+
 
 % flags and thresholds
+flags.macorrect = 'none'; % 'none' or 'spline'
+flags.bpfilt = 'image';% 'none' 'channel' or 'image'
 flags.imagerecon = 'brain'; %'brain' or 'brain+scalp'
 flags.rhoSD_ssThresh = 15;
 flags.gsr = 'image';%'none','channel' or 'image'
@@ -45,9 +24,10 @@ flags.r_thresh = 0.7; % .r_thresh is the threshold for the clustering
 flags.plot=0; % .plot  flag to plot the brain correlation map
 flags.p_thresh = 0; % . p_thresh is used to plot r values below that p-val (use 0 to plot all the correlations)
 flags.clusteringType = 1; %1:Matlab, 2:David's algorithm
-fOut_reliability=sprintf('reliability_imrecon-%s_gsr-%s_clust-%i',flags.imagerecon,flags.gsr,flags.clusteringType);
-fOut_imrecon_prefix =sprintf('imrecon-%s_gsr-%s_clust-%i',flags.imagerecon,flags.gsr,flags.clusteringType);
-pipelineDir = sprintf('%sPipeline-%s_gsr-%s_clust-%i/',derivFolder,flags.imagerecon,flags.gsr,flags.clusteringType);
+pipeline_str = sprintf('macor-%s_bpfilt-%s_imrec-%s_gsr-%s_clust-%i',...
+    flags.macorrect,flags.bpfilt,flags.imagerecon,flags.gsr,flags.clusteringType);
+fOut_reliability=sprintf('reliability_%s',pipeline_str);
+pipelineDir = sprintf('%sPipeline-%s/',derivFolder,pipeline_str);
 [dmn_mask,dan_mask,mesh_brain,idx_select] = Parcellation_FC(anatomFolder,fwFolder);
 if ~exist(pipelineDir,'dir')
     mkdir(pipelineDir);
@@ -60,8 +40,8 @@ if ~exist([pipelineDir,fOut_reliability,'.mat'],'file');
         fprintf('==============================\n');
         fprintf('Subject %s\n',subject);
         fprintf('==============================\n');
-        SnirfFilePathr1 = [dataDir,'Subj-',subject,'/nirs/sub-',subject,'_task-RS_run-1_nirs.snirf'];
-        SnirfFilePathr2 = [dataDir,'Subj-',subject,'/nirs/sub-',subject,'_task-RS_run-2_nirs.snirf'];
+        SnirfFilePathr1 = [dataDir,'sub-',subject,'/nirs/sub-',subject,'_task-RS_run-1_nirs.snirf'];
+        SnirfFilePathr2 = [dataDir,'sub-',subject,'/nirs/sub-',subject,'_task-RS_run-2_nirs.snirf'];
 
         %%-
         [snirfObjr1,dcObjr1,dodObjr1] = Preprocessing_FC(SnirfFilePathr1,flags);
@@ -84,8 +64,21 @@ if ~exist([pipelineDir,fOut_reliability,'.mat'],'file');
         [HbR_brain_chunkr2] = ExctractChunk(HbR_brainr2,snirfObjr2,twindow);
         %%
         % Do we want to concatenate r1 and r2?
-        [HbO_brain_r1r2] = [HbO_brain_chunkr1;HbO_brain_chunkr2];
-        [HbR_brain_r1r2] = [HbR_brain_chunkr1;HbR_brain_chunkr2];
+        [HbO_brain_r1r2NoFilt] = [HbO_brain_chunkr1;HbO_brain_chunkr2];
+        [HbR_brain_r1r2NoFilt] = [HbR_brain_chunkr1;HbR_brain_chunkr2];
+        % Band pass filtering in image space
+        if strcmp(flags.bpfilt,'image')
+            %[y2] = image_BandpassFilt(y,hpf,lpf,fs)
+            fs = mean(1./diff(snirfObjr1.data.time));
+            HbO_brain_r1r2 = image_BandpassFilt(HbO_brain_r1r2NoFilt, 0.009, 0.080,fs);
+            HbR_brain_r1r2 = image_BandpassFilt(HbR_brain_r1r2NoFilt, 0.009, 0.080,fs);
+        end
+        % Global signal regression in image space?
+        if strcmp(flags.gsr,'image') && ~strcmp(flags.bpfilt,'none')
+            HbO_brain_r1r2 = GlobalRegression(HbO_brain_r1r2);
+            HbR_brain_r1r2 = GlobalRegression(HbR_brain_r1r2);
+        end
+
         %%
         [dmn_mask_hbo] = Clustering_FC(HbO_brain_r1r2,dmn_mask,flags);
         [dmn_mask_hbr] = Clustering_FC(HbR_brain_r1r2,dmn_mask,flags);
@@ -106,14 +99,16 @@ if ~exist([pipelineDir,fOut_reliability,'.mat'],'file');
             [~,hmap2,A_select2] = CorrelationBrainMap_FC(dmn_improv_hbo(iSubmask),mesh_brain,idx_select,HbO_brain_chunkr2,flags.p_thresh,flags.plot);
             BrainMaps_hbo(:,iSubmask) = A_select1;
             BrainMaps_hbo(:,length(dmn_improv_hbo)+length(dan_improv_hbo)+iSubmask) = A_select2;
-            fprintf('(hbo)DMN submask %i of %i\n',iSubmask,length(dmn_improv_hbo));
+            dmn_seeds_ts(:,iSubmask,1,iSubj) = mean(HbO_brain_r1r2NoFilt(:,dmn_improv_hbo(iSubmask).vertices_index(dmn_improv_hbo(iSubmask).mask_subsetseed)),2);
+            fprintf('(hbo)DMN submask %i of %i\t',iSubmask,length(dmn_improv_hbo));
         end
         for iSubmask=1:length(dan_improv_hbo)
             [~,hmap1,A_select1] = CorrelationBrainMap_FC(dan_improv_hbo(iSubmask),mesh_brain,idx_select,HbO_brain_chunkr1,flags.p_thresh,flags.plot);
             [~,hmap2,A_select2] = CorrelationBrainMap_FC(dan_improv_hbo(iSubmask),mesh_brain,idx_select,HbO_brain_chunkr2,flags.p_thresh,flags.plot);
             BrainMaps_hbo(:,length(dmn_improv_hbo)+iSubmask) = A_select1;
             BrainMaps_hbo(:,2*length(dmn_improv_hbo)+length(dan_improv_hbo)+iSubmask) = A_select2;
-            fprintf('(hbo)DAN submask %i of %i\n',iSubmask,length(dan_improv_hbo));
+            dan_seeds_ts(:,iSubmask,1,iSubj) = mean(HbO_brain_r1r2NoFilt(:,dan_improv_hbo(iSubmask).vertices_index(dan_improv_hbo(iSubmask).mask_subsetseed)),2);
+            fprintf('\n(hbo)DAN submask %i of %i\t',iSubmask,length(dan_improv_hbo));
         end
 
         % hbr
@@ -123,14 +118,16 @@ if ~exist([pipelineDir,fOut_reliability,'.mat'],'file');
             [~,hmap2,A_select2] = CorrelationBrainMap_FC(dmn_improv_hbr(iSubmask),mesh_brain,idx_select,HbR_brain_chunkr2,flags.p_thresh,flags.plot);
             BrainMaps_hbr(:,iSubmask) = A_select1;
             BrainMaps_hbr(:,length(dmn_improv_hbr)+length(dan_improv_hbr)+iSubmask) = A_select2;
-            fprintf('(hbr)DMN submask %i of %i\n',iSubmask,length(dmn_improv_hbr));
+            dmn_seeds_ts(:,iSubmask,2,iSubj) = mean(HbR_brain_r1r2NoFilt(:,dmn_improv_hbr(iSubmask).vertices_index(dmn_improv_hbr(iSubmask).mask_subsetseed)),2);
+            fprintf('\n(hbr)DMN submask %i of %i\t',iSubmask,length(dmn_improv_hbr));
         end
         for iSubmask=1:length(dan_improv_hbr)
             [~,hmap1,A_select1] = CorrelationBrainMap_FC(dan_improv_hbr(iSubmask),mesh_brain,idx_select,HbR_brain_chunkr1,flags.p_thresh,flags.plot);
             [~,hmap2,A_select2] = CorrelationBrainMap_FC(dan_improv_hbr(iSubmask),mesh_brain,idx_select,HbR_brain_chunkr2,flags.p_thresh,flags.plot);
             BrainMaps_hbr(:,length(dmn_improv_hbr)+iSubmask) = A_select1;
             BrainMaps_hbr(:,2*length(dmn_improv_hbr)+length(dan_improv_hbr)+iSubmask) = A_select2;
-            fprintf('(hbr)DAN submask %i of %i\n',iSubmask,length(dan_improv_hbr));
+            dan_seeds_ts(:,iSubmask,2,iSubj) = mean(HbR_brain_r1r2NoFilt(:,dan_improv_hbr(iSubmask).vertices_index(dan_improv_hbr(iSubmask).mask_subsetseed)),2);
+            fprintf('\n(hbr)DAN submask %i of %i\t',iSubmask,length(dan_improv_hbr));
         end
         %%
         %test-retest subj
@@ -142,9 +139,9 @@ if ~exist([pipelineDir,fOut_reliability,'.mat'],'file');
         %figure(10), imagesc(r,[-1 1]); colormap("jet")
         rDMNDAN_AllSubj_hbr(:,:,iSubj) = r;
     end
-    save([pipelineDir,fOut_reliability,'.mat'],'rDMNDAN_AllSubj_hbo','rDMNDAN_AllSubj_hbr','flags');
+    save([pipelineDir,fOut_reliability,'.mat'],'rDMNDAN_AllSubj_hbo','rDMNDAN_AllSubj_hbr','flags','dmn_seeds_ts','dan_seeds_ts');
 else
-    load([pipelineDir,fOut_reliability,'.mat'],'rDMNDAN_AllSubj_hbo','rDMNDAN_AllSubj_hbr','flags');
+    load([pipelineDir,fOut_reliability,'.mat'],'rDMNDAN_AllSubj_hbo','rDMNDAN_AllSubj_hbr','flags','dmn_seeds_ts','dan_seeds_ts');
 end
 %%-
 %test-retest group
