@@ -9,15 +9,20 @@ seed_ts = mean(HbXBrain(:,submask.vertices_index(submask.mask_subsetseed)),2);
 
 
 non_seed = HbXBrain; non_seed(:,submask.vertices_index(submask.mask_subsetseed)) = [];
-R_HbO =zeros(1,size(non_seed,2));
-P_HbO =zeros(1,size(non_seed,2));
+R_HbO =[];
+P_HbO =[];
+stime=tic;
 for kk = 1:size(non_seed,2)
     [R,P] = corrcoef(seed_ts, non_seed(:,kk));
     R_HbO(kk) = R(2);P_HbO(kk) = P(2);
 end
-
-%R_HbO_f = 0.5*log((1+R_HbO)./(1-R_HbO));
-R_HbO_f = R_HbO;
+toc(stime);
+stime2=tic;
+[R_HbO,P_HbO]=corrcoef([seed_ts,non_seed]);
+P_HbO = P_HbO(1,2:end);
+R_HbO = R_HbO(1,2:end);
+toc(stime2);
+R_HbO_f = 0.5*log((1+R_HbO)./(1-R_HbO));
 hmap =[];
 % HbO
 
