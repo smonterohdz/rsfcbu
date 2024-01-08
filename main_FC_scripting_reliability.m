@@ -14,8 +14,9 @@ if isunix()
     dataDir = '/projectnb/nphfnirs/s/DATA_BU/2022/Rest_Movie_WorkingMemory/DataRSFC_Analysis/';
 end
 if ispc()
-    mypwd = pwd;cd c:\Homer3_smh_repo\;setpaths;cd(mypwd);
-    mypwd = pwd;cd c:\AtlasViewer-2.18.1\;setpaths;cd(mypwd);
+    addpath('./cbrewer/');
+    mypwd = pwd;cd X:\Homer3_smh_repo\;setpaths;cd(mypwd);
+    mypwd = pwd;cd X:\atlasViewer-repo\;setpaths;cd(mypwd);
     fwFolder = 'C:\Users\smontero\OneDrive - Boston University\RS_MovieWatching\Rest_Movie_WorkingMemory\fw\';
     anatomFolder = 'C:\Users\smontero\OneDrive - Boston University\RS_MovieWatching\Rest_Movie_WorkingMemory\probe_10MPhotons\anatomical\';
     derivFolder = 'C:\Users\smontero\OneDrive - Boston University\RS_MovieWatching\Rest_Movie_WorkingMemory\derivatives\rsfc\';
@@ -29,9 +30,9 @@ rDMNDAN_AllSubj_hbr = zeros(40,40,length(subjects_set));
 nSubjs=length(subjects_set);
 
 % flags and thresholds
-flags.imagerecon = 'brain+scalp'; %'brain' or 'brain+scalp'
+flags.imagerecon = 'brain'; %'brain' or 'brain+scalp'
 flags.rhoSD_ssThresh = 15;
-flags.gsr = 'none';%'none','channel' or 'image'
+flags.gsr = 'image';%'none','channel' or 'image'
 flags.r_thresh = 0.7; % .r_thresh is the threshold for the clustering
 flags.plot=0; % .plot  flag to plot the brain correlation map
 flags.p_thresh = 0; % . p_thresh is used to plot r values below that p-val (use 0 to plot all the correlations)
