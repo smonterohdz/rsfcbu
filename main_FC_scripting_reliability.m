@@ -6,8 +6,12 @@ clear all;
 if isunix()
     maxNumCompThreads(16);
     addpath('./cbrewer/');
-    mypwd=pwd;cd('../atlasviewer_repo/');setpaths;cd(mypwd);
-    mypwd=pwd;cd('../homer3_repo/');setpaths;cd(mypwd);
+    if isempty(which('AtlasViewerGUI'))
+        mypwd=pwd;cd('../atlasviewer_repo/');setpaths;cd(mypwd);
+    end
+    if isempty(which('Homer3'))
+        mypwd=pwd;cd('../homer3_repo/');setpaths;cd(mypwd);
+    end
     fwFolder = '/projectnb/nphfnirs/s/DATA_BU/2022/Rest_Movie_WorkingMemory/DataRSFC_Analysis/fw/';
     anatomFolder = '/projectnb/nphfnirs/s/DATA_BU/2022/Rest_Movie_WorkingMemory/DataRSFC_Analysis/probe_10MPhotons/anatomical/';
     derivFolder = '/projectnb/nphfnirs/s/DATA_BU/2022/Rest_Movie_WorkingMemory/DataRSFC_Analysis/derivatives/';
@@ -15,8 +19,12 @@ if isunix()
 end
 if ispc()
     addpath('./cbrewer/');
-    mypwd = pwd;cd X:\Homer3_smh_repo\;setpaths;cd(mypwd);
-    mypwd = pwd;cd X:\atlasViewer-repo\;setpaths;cd(mypwd);
+    if isempty(which('Homer3'))
+        mypwd = pwd;cd X:\Homer3_smh_repo\;setpaths;cd(mypwd);
+    end
+    if isempty(which('AtlasViewerGUI'))
+        mypwd = pwd;cd X:\atlasViewer-repo\;setpaths;cd(mypwd);
+    end
     fwFolder = 'C:\Users\smontero\OneDrive - Boston University\RS_MovieWatching\Rest_Movie_WorkingMemory\fw\';
     anatomFolder = 'C:\Users\smontero\OneDrive - Boston University\RS_MovieWatching\Rest_Movie_WorkingMemory\probe_10MPhotons\anatomical\';
     derivFolder = 'C:\Users\smontero\OneDrive - Boston University\RS_MovieWatching\Rest_Movie_WorkingMemory\derivatives\rsfc\';
@@ -204,5 +212,5 @@ colorbar
 xlabel({'Submasks Run2'});
 
 f.Position = [10         10        1049         507];
-saveas(f,[fOut_reliability,'.png']);
+saveas(f,[pipelineDir,fOut_reliability,'.png']);
 close(f);
