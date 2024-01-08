@@ -2,8 +2,10 @@
 % test-retest reliability using individual imprpved seeds/submasks
 clear all;
 
-addpath('cbrewer\');
+
 if isunix()
+    maxNumCompThreads(16);
+    addpath('./cbrewer/');
     mypwd=pwd;cd('../atlasviewer_repo/');setpaths;cd(mypwd);
     mypwd=pwd;cd('../homer3_repo/');setpaths;cd(mypwd);
     fwFolder = '/projectnb/nphfnirs/s/DATA_BU/2022/Rest_Movie_WorkingMemory/DataRSFC_Analysis/fw/';
