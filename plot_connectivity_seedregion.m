@@ -1,7 +1,5 @@
 function h_fig = plot_connectivity_seedregion(mesh,A,color_bar_range,seed,...
     seed_HbO,seed_HbR,HbX_time,mask_idx)
-fs = 10.1725;
-fcut_max = 0.1;
 f=mesh.faces;
 v=mesh.vertices;
 axes_order = [2,1,3];
@@ -73,7 +71,7 @@ for i=1:5
         elseif isequal(color_bar_range,[1 100])
             myColorMap=flipud(cbrewer('qual','Paired',20));
             myColorMap = [0.8,0.8,0.8;myColorMap];
-        elseif isequal(color_bar_range,[0 16])
+        elseif isequal(color_bar_range,[0 100])
             myColorMap=cbrewer('seq','YlGn',25);
             %myColorMap = hsv(30);
             myColorMap = [0.7,0.7,0.7;myColorMap];
@@ -81,9 +79,9 @@ for i=1:5
             myColorMap=[flipud(cbrewer('seq','GnBu',length(unique(A))));...
                 cbrewer('seq','YlOrRd',length(unique(A)))];
             myColorMap(length(unique(A)),:) = [0.95 0.95 0.95];
-            myColorMap(length(unique(A))+1,:) = [0.95 0.95 0.95];          
+            myColorMap(length(unique(A))+1,:) = [0.95 0.95 0.95];
         else
-                myColorMap=flipud(cbrewer('div','RdBu',256));            
+            myColorMap=flipud(cbrewer('div','RdBu',256));
         end
         %myColorMap(113:144,:) = 0.8;
     else

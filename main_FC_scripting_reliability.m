@@ -32,6 +32,7 @@ flags.clusteringType = 1; %1:Matlab, 2:David's algorithm
 pipeline_str = sprintf('macor-%s_bpfilt-%s_imrec-%s_gsr-%s_clust-%i',...
     flags.macorrect,flags.bpfilt,flags.imagerecon,flags.gsr,flags.clusteringType);
 fOut_reliability=sprintf('reliability_%s',pipeline_str);
+fOut_pmap=sprintf('probMap_%s',pipeline_str);
 pipelineDir = sprintf('%sPipeline-%s/',derivFolder,pipeline_str);
 if ~exist(pipelineDir,'dir')
     mkdir(pipelineDir);
@@ -231,3 +232,17 @@ xlabel({'Submasks Run2'});
 f.Position = [10         10        1049         507];
 saveas(f,[pipelineDir,fOut_reliability,'.png']);
 close(f);
+
+%%
+[hmap] = probabilityMap_FC(dmn_improv_hbo,mesh_brain,idx_select,'Probability Group DMN HbO Map');
+saveas(hmap,[pipelineDir,fOut_pmap,'_dmn_hbo.png']);
+close(hmap);
+[hmap] = probabilityMap_FC(dan_improv_hbo,mesh_brain,idx_select,'Probability Group DAN HbO Map');
+saveas(hmap,[pipelineDir,fOut_pmap,'_dan_hbo.png']);
+close(hmap);
+[hmap] = probabilityMap_FC(dmn_improv_hbr,mesh_brain,idx_select,'Probability Group DMN HbR Map');
+saveas(hmap,[pipelineDir,fOut_pmap,'_dmn_hbr.png']);
+close(hmap);
+[hmap] = probabilityMap_FC(dan_improv_hbr,mesh_brain,idx_select,'Probability Group DAN HbR Map');
+saveas(hmap,[pipelineDir,fOut_pmap,'_dan_hbr.png']);
+close(hmap);
