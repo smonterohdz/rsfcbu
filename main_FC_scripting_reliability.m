@@ -1,6 +1,7 @@
 %%
 % test-retest reliability using individual imprpved seeds/submasks
 clear all;
+OVERWRITE_ = 1;
 
 [fwFolder,anatomFolder,derivFolder,dataDir] = setmyenv();
 
@@ -21,14 +22,15 @@ dan_seeds_ts = cell(length(dan_mask),2,nSubjs);
 
 % flags and thresholds
 flags.macorrect = 'spline'; % 'none' or 'spline'
-flags.bpfilt = 'image';% 'none' 'channel' or 'image'
-flags.imagerecon = 'brain'; %'brain' or 'brain+scalp'
+flags.bpfilt = 'channel';% 'none' 'channel' or 'image'
+flags.imagerecon = 'brain+scalp'; %'brain' or 'brain+scalp'
 flags.rhoSD_ssThresh = 15;
-flags.gsr = 'image';%'none','channel' or 'image'
+flags.gsr = 'none';%'none','channel' or 'image'
 flags.r_thresh = 0.7; % .r_thresh is the threshold for the clustering
 flags.plot=0; % .plot  flag to plot the brain correlation map
 flags.p_thresh = 0; % . p_thresh is used to plot r values below that p-val (use 0 to plot all the correlations)
 flags.clusteringType = 1; %1:Matlab, 2:David's algorithm
+
 pipeline_str = sprintf('macor-%s_bpfilt-%s_imrec-%s_gsr-%s_clust-%i',...
     flags.macorrect,flags.bpfilt,flags.imagerecon,flags.gsr,flags.clusteringType);
 fOut_reliability=sprintf('reliability_%s',pipeline_str);
@@ -39,7 +41,7 @@ if ~exist(pipelineDir,'dir')
 end
 
 %%
-if ~exist([pipelineDir,fOut_reliability,'.mat'],'file');
+if OVERWRITE_ || ~exist([pipelineDir,fOut_reliability,'.mat'],'file')
     for iSubj = 1:nSubjs
         subject = num2str(subjects_set(iSubj));
         fprintf('==============================\n');
@@ -234,15 +236,15 @@ saveas(f,[pipelineDir,fOut_reliability,'.png']);
 close(f);
 
 %%
-[hmap] = probabilityMap_FC(dmn_improv_hbo,mesh_brain,idx_select,'Probability Group DMN HbO Map');
+[hmap] = probabilityMap_FC(dmn_improv_hbo,mesh_brain,idx_select,['Probability Group DMN HbO Map (',pipeline_str,')']);
 saveas(hmap,[pipelineDir,fOut_pmap,'_dmn_hbo.png']);
 close(hmap);
-[hmap] = probabilityMap_FC(dan_improv_hbo,mesh_brain,idx_select,'Probability Group DAN HbO Map');
+[hmap] = probabilityMap_FC(dan_improv_hbo,mesh_brain,idx_select,['Probability Group DAN HbO Map (',pipeline_str,')']);
 saveas(hmap,[pipelineDir,fOut_pmap,'_dan_hbo.png']);
 close(hmap);
-[hmap] = probabilityMap_FC(dmn_improv_hbr,mesh_brain,idx_select,'Probability Group DMN HbR Map');
+[hmap] = probabilityMap_FC(dmn_improv_hbr,mesh_brain,idx_select,['Probability Group DMN HbR Map (',pipeline_str,')']);
 saveas(hmap,[pipelineDir,fOut_pmap,'_dmn_hbr.png']);
 close(hmap);
-[hmap] = probabilityMap_FC(dan_improv_hbr,mesh_brain,idx_select,'Probability Group DAN HbR Map');
+[hmap] = probabilityMap_FC(dan_improv_hbr,mesh_brain,idx_select,['Probability Group DAN HbR Map (',pipeline_str,')']);
 saveas(hmap,[pipelineDir,fOut_pmap,'_dan_hbr.png']);
 close(hmap);

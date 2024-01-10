@@ -17,6 +17,6 @@ A(idx_select) = A_select./nSubj.*100;
 hmap = plot_connectivity_seedregion(mesh_brain,A,[0 100],[],[],[],[],[]);
 cb=colorbar;
 cb.Label.String='Spatial Correspondence (%)';
-sgtitle(maskLabel);
+sgtitle(maskLabel,'interpreter','none');
 hold on;
 end
