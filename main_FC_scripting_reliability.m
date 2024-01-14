@@ -21,11 +21,11 @@ dan_seeds_ts = cell(length(dan_mask),2,nSubjs);
 
 
 % flags and thresholds
-flags.macorrect = 'spline'; % 'none' or 'spline'
-flags.bpfilt = 'channel';% 'none' 'channel' or 'image'
+flags.macorrect = 'none'; % 'none' or 'spline'
+flags.bpfilt = 'image';% 'none' 'channel' or 'image'
 flags.imagerecon = 'brain+scalp'; %'brain' or 'brain+scalp'
 flags.rhoSD_ssThresh = 15;
-flags.gsr = 'none';%'none','channel' or 'image'
+flags.gsr = 'image';%'none','channel' or 'image'
 flags.r_thresh = 0.7; % .r_thresh is the threshold for the clustering
 flags.plot=0; % .plot  flag to plot the brain correlation map
 flags.p_thresh = 0; % . p_thresh is used to plot r values below that p-val (use 0 to plot all the correlations)

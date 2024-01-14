@@ -1,6 +1,8 @@
 %%
-fwFolder = 'C:\Users\smontero\OneDrive - Boston University\RS_MovieWatching\Rest_Movie_WorkingMemory\fw\';
-anatomFolder = 'C:\Users\smontero\OneDrive - Boston University\RS_MovieWatching\Rest_Movie_WorkingMemory\probe_10MPhotons\anatomical\';
+clear all;
+OVERWRITE_ = 1;
+
+[fwFolder,anatomFolder,derivFolder,dataDir] = setmyenv();
 
 subjects_set = [1:7 9:16];
 rDMNDAN_AllSubj_hbo = zeros(40,40,length(subjects_set));
@@ -8,22 +10,26 @@ rDMNDAN_AllSubj_hbr = zeros(40,40,length(subjects_set));
 nSubjs=length(subjects_set);
 
 % flags and thresholds.
-flags.imagerecon = 'brain'; %'brain' or 'brain+scalp' Image reconstruction
-flags.rhoSD_ssThresh = 15; %threshold (mm) to identify and remove short-separation channles.
-flags.gsr = 'none'; %Space to perform global signal regression: 'none','channel' or 'image'
-flags.r_thresh = 0.7; % value required for Clustering 1 (Matlab clustering)
-flags.plot=1;  % whether to plot or not the compuytes brain correlation map.
-flags.p_thresh = 0; %is used to plot r values below .p_thresh (use 0 to plot all the correlations)
+flags.macorrect = 'none'; % 'none' or 'spline'
+flags.bpfilt = 'image';% 'none' 'channel' or 'image'
+flags.imagerecon = 'brain+scalp'; %'brain' or 'brain+scalp'
+flags.rhoSD_ssThresh = 15;
+flags.gsr = 'image';%'none','channel' or 'image'
+flags.r_thresh = 0.7; % .r_thresh is the threshold for the clustering
+flags.plot=0; % .plot  flag to plot the brain correlation map
+flags.p_thresh = 0; % . p_thresh is used to plot r values below that p-val (use 0 to plot all the correlations)
 flags.clusteringType = 1; %1:Matlab, 2:David's algorithm
+flags.task = 'WM';
 % to obtain the corresponding nodes in the mesh for each submask
 [dmn_mask,dan_mask,mesh_brain,idx_select] = Parcellation_FC(anatomFolder,fwFolder);
 
+%%
 iSubj = 1;
 %for iSubj = 1:nSubjs
 subject = num2str(subjects_set(iSubj));
 fprintf('Subject %s------------------------\n',subject);
-SnirfFilePathr1 = ['C:\Users\smontero\OneDrive - Boston University\RS_MovieWatching\Rest_Movie_WorkingMemory\sub-',subject,'\nirs\sub-',subject,'_task-RS_run-1_nirs.snirf'];
-SnirfFilePathr2 = ['C:\Users\smontero\OneDrive - Boston University\RS_MovieWatching\Rest_Movie_WorkingMemory\sub-',subject,'\nirs\sub-',subject,'_task-RS_run-2_nirs.snirf'];
+SnirfFilePathr1 = [dataDir,'Subj-',subject,'/nirs/sub-',subject,'_task-',flags.task,'_run-1_nirs.snirf'];
+SnirfFilePathr2 = [dataDir,'Subj-',subject,'/nirs/sub-',subject,'_task-',flags.task,'_run-2_nirs.snirf'];
 
 %%
 [snirfObjr1,dcObjr1,dodObjr1] = Preprocessing_FC(SnirfFilePathr1,flags);
@@ -41,11 +47,28 @@ twindow.init_sec = -1;
 twindow.offset_sec = 60;
 %twindow.init_sec = 30;
 %twindow.dur_sec = 180;
-[HbO_brain_chunkr1] = ExctractChunk(HbO_brainr1,snirfObjr1,twindow);
-[HbR_brain_chunkr1] = ExctractChunk(HbR_brainr1,snirfObjr1,twindow);
+[HbO_brain_chunkr1] = ExctractChunk(HbO_brainr1,snirfObjr1,twindow,flags);
+[HbR_brain_chunkr1] = ExctractChunk(HbR_brainr1,snirfObjr1,twindow,flags);
 %[HbO_brain_chunkr2] = ExctractChunk(HbO_brainr2,snirfObjr2,twindow);
 %[HbR_brain_chunkr2] = ExctractChunk(HbR_brainr2,snirfObjr2,twindow);
 
+
+% Band pass filtering in image space
+if strcmp(flags.bpfilt,'image')
+    %[y2] = image_BandpassFilt(y,hpf,lpf,fs)
+    fs = mean(1./diff(snirfObjr1.data.time));
+    HbO_brain_chunkr1 = image_BandpassFilt(HbO_brain_chunkr1, 0.009, 0.080,fs);
+    HbR_brain_chunkr1 = image_BandpassFilt(HbR_brain_chunkr1, 0.009, 0.080,fs);
+    % HbO_brain_chunkr2 = image_BandpassFilt(HbO_brain_chunkr2, 0.009, 0.080,fs);
+    % HbR_brain_chunkr2 = image_BandpassFilt(HbR_brain_chunkr2, 0.009, 0.080,fs);
+end
+% Global signal regression in image space?
+if strcmp(flags.gsr,'image') && ~strcmp(flags.bpfilt,'none')
+    HbO_brain_chunkr1 = GlobalRegression(HbO_brain_chunkr1);
+    HbR_brain_chunkr1 = GlobalRegression(HbR_brain_chunkr1);
+    % HbO_brain_chunkr2 = GlobalRegression(HbO_brain_chunkr2);
+    % HbR_brain_chunkr2 = GlobalRegression(HbR_brain_chunkr2);
+end
 %%
 % Do we want to concatenate r1 and r2?
 %[HbO_brain_r1r2] = [HbO_brain_chunkr1;HbO_brain_chunkr2];
