@@ -11,8 +11,8 @@ nSubjs=length(subjects_set);
 
 % flags and thresholds.
 flags.macorrect = 'none'; % 'none' or 'spline'
-flags.bpfilt = 'image';% 'none' 'channel' or 'image'
-flags.imagerecon = 'brain+scalp'; %'brain' or 'brain+scalp'
+flags.bpfilt = 'channel';% 'none' 'channel' or 'image'
+flags.imagerecon = 'brain'; %'brain' or 'brain+scalp'
 flags.rhoSD_ssThresh = 15;
 flags.gsr = 'image';%'none','channel' or 'image'
 flags.r_thresh = 0.7; % .r_thresh is the threshold for the clustering
@@ -20,16 +20,25 @@ flags.plot=0; % .plot  flag to plot the brain correlation map
 flags.p_thresh = 0; % . p_thresh is used to plot r values below that p-val (use 0 to plot all the correlations)
 flags.clusteringType = 1; %1:Matlab, 2:David's algorithm
 flags.task = 'WM';
+pipeline_str = sprintf('macor-%s_bpfilt-%s_imrec-%s_gsr-%s_clust-%i',...
+    flags.macorrect,flags.bpfilt,flags.imagerecon,flags.gsr,flags.clusteringType);
+fOut_map=sprintf('WM-Map_%s',pipeline_str);
+pipelineDir = sprintf('%sPipeline-%s/',derivFolder,pipeline_str);
+if ~exist(pipelineDir,'dir')
+    mkdir(pipelineDir);
+end
 % to obtain the corresponding nodes in the mesh for each submask
 [dmn_mask,dan_mask,mesh_brain,idx_select] = Parcellation_FC(anatomFolder,fwFolder);
 
 %%
 iSubj = 1;
+%iRun = 1;
 %for iSubj = 1:nSubjs
+for iRun=1:8
 subject = num2str(subjects_set(iSubj));
 fprintf('Subject %s------------------------\n',subject);
-SnirfFilePathr1 = [dataDir,'Subj-',subject,'/nirs/sub-',subject,'_task-',flags.task,'_run-1_nirs.snirf'];
-SnirfFilePathr2 = [dataDir,'Subj-',subject,'/nirs/sub-',subject,'_task-',flags.task,'_run-2_nirs.snirf'];
+SnirfFilePathr1 = [dataDir,'Subj-',subject,'/nirs/sub-',subject,'_task-',flags.task,'_run-',num2str(iRun),'_nirs.snirf'];
+%SnirfFilePathr2 = [dataDir,'Subj-',subject,'/nirs/sub-',subject,'_task-',flags.task,'_run-2_nirs.snirf'];
 
 %%
 [snirfObjr1,dcObjr1,dodObjr1] = Preprocessing_FC(SnirfFilePathr1,flags);
@@ -37,14 +46,14 @@ SnirfFilePathr2 = [dataDir,'Subj-',subject,'/nirs/sub-',subject,'_task-',flags.t
 %%
 [HbO_brainr1,HbR_brainr1] = ImageReconstruction_FC(snirfObjr1,dodObjr1,dcObjr1,fwFolder,flags);
 % Do I want to visualize HbO from the Image recon?
-checkImg_FC(fwFolder,HbO_brainr1,dodObjr1.time);
+%checkImg_FC(fwFolder,HbO_brainr1,dodObjr1.time);
 
 %%
 % use twindow.init_sec = -1 if you want to use the onset and duration
 % defined in the snirf file (assuming there is only one stimulus).
 % Otherwise, change the values (in sec.) according to your needs
 twindow.init_sec = -1;
-twindow.offset_sec = 60;
+twindow.offset_sec = 0;
 %twindow.init_sec = 30;
 %twindow.dur_sec = 180;
 [HbO_brain_chunkr1] = ExctractChunk(HbO_brainr1,snirfObjr1,twindow,flags);
@@ -87,23 +96,46 @@ end
 
 %%
 % HbO
+BrainMaps_hbo = zeros(length(idx_select),1*(length(dmn_improv_hbo)+length(dan_improv_hbo)));
 for iSubmask=1:length(dmn_improv_hbo)
     %obtain the correlation brain map after preprocessing and by using the
     %seed passed as the first argument.
     [~,hmap1,A_select1] = CorrelationBrainMap_FC(dmn_improv_hbo(iSubmask),mesh_brain,idx_select,HbO_brain_chunkr1,flags.p_thresh,flags.plot);    
+    BrainMaps_hbo(:,iSubmask) = A_select1;
     fprintf('(hbo)DMN submask %i of %i\n',iSubmask,length(dmn_improv_hbo));
 end
 for iSubmask=1:length(dan_improv_hbo)
     [~,hmap1,A_select1] = CorrelationBrainMap_FC(dan_improv_hbo(iSubmask),mesh_brain,idx_select,HbO_brain_chunkr1,flags.p_thresh,flags.plot);
+    BrainMaps_hbo(:,length(dmn_improv_hbo)+iSubmask) = A_select1;
     fprintf('(hbo)DAN submask %i of %i\n',iSubmask,length(dan_improv_hbo));
 end
 
+f=figure;
+imagesc(corrcoef(BrainMaps_hbo),[-1,1]);
+colormap("jet");
+colorbar();
+title({sprintf('Subject %s DMN-DAN HbO Run %i',subject,iRun),pipeline_str},'Interpreter','none');
+saveas(f,[pipelineDir,fOut_map,'_r-',num2str(iRun),'_hbo.png']);
+close(f);
+
 % hbr
+BrainMaps_hbr = zeros(length(idx_select),1*(length(dmn_improv_hbr)+length(dan_improv_hbr)));
 for iSubmask=1:length(dmn_improv_hbr)
     [~,hmap1,A_select1] = CorrelationBrainMap_FC(dmn_improv_hbr(iSubmask),mesh_brain,idx_select,HbR_brain_chunkr1,flags.p_thresh,flags.plot);
+    BrainMaps_hbr(:,iSubmask) = A_select1;
     fprintf('(hbr)DMN submask %i of %i\n',iSubmask,length(dmn_improv_hbr));
 end
 for iSubmask=1:length(dan_improv_hbr)
     [~,hmap1,A_select1] = CorrelationBrainMap_FC(dan_improv_hbr(iSubmask),mesh_brain,idx_select,HbR_brain_chunkr1,flags.p_thresh,flags.plot);
+    BrainMaps_hbr(:,length(dmn_improv_hbr)+iSubmask) = A_select1;
     fprintf('(hbr)DAN submask %i of %i\n',iSubmask,length(dan_improv_hbr));
+end
+
+f=figure;
+imagesc(corrcoef(BrainMaps_hbr),[-1,1]);
+colormap("jet");
+colorbar();
+title({sprintf('Subject %s DMN-DAN HbR Run %i',subject,iRun),pipeline_str},'Interpreter','none');
+saveas(f,[pipelineDir,fOut_map,'_r-',num2str(iRun),'_hbr.png']);
+close(f);
 end
