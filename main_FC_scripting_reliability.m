@@ -22,7 +22,7 @@ dan_seeds_ts = cell(length(dan_mask),2,nSubjs);
 
 % flags and thresholds
 flags.macorrect = 'none'; % 'none' or 'spline'
-flags.bpfilt = 'image';% 'none' 'channel' or 'image'
+flags.bpfilt = 'channel';% 'none' 'channel' or 'image'
 flags.imagerecon = 'brain+scalp'; %'brain' or 'brain+scalp'
 flags.rhoSD_ssThresh = 15;
 flags.gsr = 'image';%'none','channel' or 'image'
@@ -30,9 +30,9 @@ flags.r_thresh = 0.7; % .r_thresh is the threshold for the clustering
 flags.plot=0; % .plot  flag to plot the brain correlation map
 flags.p_thresh = 0; % . p_thresh is used to plot r values below that p-val (use 0 to plot all the correlations)
 flags.clusteringType = 1; %1:Matlab, 2:David's algorithm
-
-pipeline_str = sprintf('macor-%s_bpfilt-%s_imrec-%s_gsr-%s_clust-%i',...
-    flags.macorrect,flags.bpfilt,flags.imagerecon,flags.gsr,flags.clusteringType);
+flags.task = 'RS';
+pipeline_str = sprintf('%s-macor-%s_bpfilt-%s_imrec-%s_gsr-%s_clust-%i',...
+    flags.task,flags.macorrect,flags.bpfilt,flags.imagerecon,flags.gsr,flags.clusteringType);
 fOut_reliability=sprintf('reliability_%s',pipeline_str);
 fOut_pmap=sprintf('probMap_%s',pipeline_str);
 pipelineDir = sprintf('%sPipeline-%s/',derivFolder,pipeline_str);
@@ -47,8 +47,8 @@ if OVERWRITE_ || ~exist([pipelineDir,fOut_reliability,'.mat'],'file')
         fprintf('==============================\n');
         fprintf('Subject %s\n',subject);
         fprintf('==============================\n');
-        SnirfFilePathr1 = [dataDir,'Subj-',subject,'/nirs/sub-',subject,'_task-RS_run-1_nirs.snirf'];
-        SnirfFilePathr2 = [dataDir,'Subj-',subject,'/nirs/sub-',subject,'_task-RS_run-2_nirs.snirf'];
+        SnirfFilePathr1 = [dataDir,'Subj-',subject,'/nirs/sub-',subject,'_task-',flags.task,'_run-1_nirs.snirf'];
+        SnirfFilePathr2 = [dataDir,'Subj-',subject,'/nirs/sub-',subject,'_task-',flags.task,'_run-2_nirs.snirf'];
 
         %%-
         [snirfObjr1,dcObjr1,dodObjr1] = Preprocessing_FC(SnirfFilePathr1,flags);
@@ -74,6 +74,8 @@ if OVERWRITE_ || ~exist([pipelineDir,fOut_reliability,'.mat'],'file')
         [HbO_brain_r1r2NoFilt] = [HbO_brain_chunkr1;HbO_brain_chunkr2];
         [HbR_brain_r1r2NoFilt] = [HbR_brain_chunkr1;HbR_brain_chunkr2];
 
+        %%
+        Preprocessing_Image_FC();
         %%
         % Band pass filtering in image space
         if strcmp(flags.bpfilt,'image')

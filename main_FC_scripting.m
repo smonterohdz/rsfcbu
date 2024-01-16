@@ -20,7 +20,7 @@ flags.plot=0; % .plot  flag to plot the brain correlation map
 flags.p_thresh = 0; % . p_thresh is used to plot r values below that p-val (use 0 to plot all the correlations)
 flags.clusteringType = 1; %1:Matlab, 2:David's algorithm
 flags.task = 'WM';
-pipeline_str = sprintf('macor-%s_bpfilt-%s_imrec-%s_gsr-%s_clust-%i',...
+pipeline_str = sprintf('WM-macor-%s_bpfilt-%s_imrec-%s_gsr-%s_clust-%i',...
     flags.macorrect,flags.bpfilt,flags.imagerecon,flags.gsr,flags.clusteringType);
 fOut_map=sprintf('WM-Map_%s',pipeline_str);
 pipelineDir = sprintf('%sPipeline-%s/',derivFolder,pipeline_str);
@@ -31,7 +31,7 @@ end
 [dmn_mask,dan_mask,mesh_brain,idx_select] = Parcellation_FC(anatomFolder,fwFolder);
 
 %%
-iSubj = 1;
+iSubj = 3;
 %iRun = 1;
 %for iSubj = 1:nSubjs
 for iRun=1:8
@@ -39,6 +39,14 @@ subject = num2str(subjects_set(iSubj));
 fprintf('Subject %s------------------------\n',subject);
 SnirfFilePathr1 = [dataDir,'Subj-',subject,'/nirs/sub-',subject,'_task-',flags.task,'_run-',num2str(iRun),'_nirs.snirf'];
 %SnirfFilePathr2 = [dataDir,'Subj-',subject,'/nirs/sub-',subject,'_task-',flags.task,'_run-2_nirs.snirf'];
+
+%%
+if exist([pipelineDir,fOut_map,'_r-',num2str(iRun),'_hbr.png'],'file')
+    continue;
+end
+if ~exist(SnirfFilePathr1,'file')
+    continue;
+end
 
 %%
 [snirfObjr1,dcObjr1,dodObjr1] = Preprocessing_FC(SnirfFilePathr1,flags);
