@@ -252,6 +252,7 @@ saveas(f,[pipelineDir,fOut_reliability,'.png']);
 close(f);
 
 %%
+% Probability maps
 [hmap] = probabilityMap_FC(dmn_improv_hbo,mesh_brain,idx_select,['Probability Group DMN HbO Map (',pipeline_str,')']);
 saveas(hmap,[pipelineDir,fOut_pmap,'_dmn_hbo.png']);
 close(hmap);
@@ -264,3 +265,6 @@ close(hmap);
 [hmap] = probabilityMap_FC(dan_improv_hbr,mesh_brain,idx_select,['Probability Group DAN HbR Map (',pipeline_str,')']);
 saveas(hmap,[pipelineDir,fOut_pmap,'_dan_hbr.png']);
 close(hmap);
+
+%%
+% Seeds plots
