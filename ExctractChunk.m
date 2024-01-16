@@ -50,4 +50,5 @@ if size(HbXBrain,1)<tend
 end
 fprintf('Using onset:%.1fs and duration:%.1fs\n',twindow.init_sec,twindow.dur_sec)
 HbXBrain_chunk = HbXBrain(tinit:tend,:);
+t_chunk = snirfObj.data.time(tinit:tend);
 end

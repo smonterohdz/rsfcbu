@@ -1,4 +1,4 @@
-function [snirfObj,dc,dod] = Preprocessing_FC(fullPathSnirf,flags)
+function [snirfObj,dc,dod,dcNP,dodNP] = Preprocessing_FC(fullPathSnirf,flags)
 %Preprocessing_FC Performs fnirs preprocessing on channel space
 %   Detailed explanation goes here
 
@@ -25,7 +25,7 @@ mlActAuto = [];
 
 % Convert to dOD
 dod = hmrR_Intensity2OD( snirfObj.data );
-
+dodNP = dod;
 if strcmp(flags.macorrect,'spline')
     % Find Motion Artifacts
     % tIncAuto = hmrR_MotionArtifact(data, probe, mlActMan, mlActAuto, tIncMan, tMotion, tMask, STDEVthresh, AMPthresh)
@@ -55,6 +55,7 @@ end
 
 % Convert to Conc
 dc = hmrR_OD2Conc( dod, snirfObj.probe, [1 1]);
+dcNP = hmrR_OD2Conc(dodNP,snirfObj.probe,[1 1]);
 
 % Global signal regression in image space?
 if strcmp(flags.gsr,'channel')
