@@ -2,7 +2,7 @@ function checkImg_FC(fwFolder,HbX,xtime)
 %checkImg_FC this functions helps us toto visualize the reconstructed image
 %   Detailed explanation goes here
 
-axes_order = [2,1,3];
+axes_order = [1,2,3];
 
 % Load Brain Adot
 load([fwFolder 'Adot.mat'],'Adot');%
@@ -22,8 +22,8 @@ figure();
  colormap('jet');
 % clim([vmax -vmax]);
 % hold on;
-%for ii=find(xtime>60,1):floor(length(xtime))
-    ii=find(xtime>86.6,1);
+for ii=find(xtime>60,1):floor(length(xtime))
+    %ii=find(xtime>86.6,1);
     hf=trisurf( f, v(:,axes_order(1)), v(:,axes_order(2)), v(:,axes_order(3)), xImg(ii,:), ...
         'facecolor','interp','edgecolor','flat','edgealpha',0, 'visible','on');
     campos([-2238.8, 132.0, 130.0])
@@ -31,6 +31,6 @@ figure();
     axis image;  
     vmax = min(xImg(ii,:),[],'all');
     clim([vmax -vmax]);
-%    pause(0.005);
-%end  
+    pause(0.005);
+end  
 end
