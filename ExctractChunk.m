@@ -2,6 +2,8 @@ function [HbXBrain_chunk] = ExctractChunk(HbXBrain,snirfObj,twindow,flags)
 %UNTITLED3 Summary of this function goes here
 %   Detailed explanation goes here
 
+if ~isfield(twindow,'stim_name')
+
 if ~isfield(twindow,'init_sec') || isempty(twindow.init_sec) 
     twindow.init_sec = 90;
 end
@@ -22,6 +24,20 @@ if twindow.init_sec == -1
             warning('No stimuli information.\n');
         end
     elseif strcmp(flags.task,'WM')
+        minOnset = Inf;
+        maxOnset = -1;
+        for iStim=1:length(snirfObj.stim)
+            if min(snirfObj.stim(iStim).data(:,1))<minOnset
+                minOnset = min(snirfObj.stim(iStim).data(:,1));
+            end
+            if max(snirfObj.stim(iStim).data(:,1))>maxOnset
+                [maxOnset,iMax] = max(snirfObj.stim(iStim).data(:,1));
+                maxDur = snirfObj.stim(iStim).data(iMax,2);
+            end
+        end
+        twindow.init_sec = minOnset;
+        twindow.dur_sec = maxOnset + maxDur;
+    else
         minOnset = Inf;
         maxOnset = -1;
         for iStim=1:length(snirfObj.stim)

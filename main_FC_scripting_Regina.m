@@ -66,7 +66,7 @@ end
 %%
 [HbO_brainr1,HbR_brainr1] = ImageReconstruction_FC(snirfObjr1,dodObjr1,dcObjr1,fwFolder,flags);
 % Do I want to visualize HbO from the Image recon?
-%checkImg_FC(fwFolder,HbO_brainr1,dodObjr1.time);
+checkImg_FC(fwFolder,HbO_brainr1,dodObjr1.time);
 
 %%
 % use twindow.init_sec = -1 if you want to use the onset and duration

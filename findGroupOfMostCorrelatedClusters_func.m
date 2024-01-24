@@ -6,11 +6,11 @@ function [g, rDMNDAN,mask_improv] = findGroupOfMostCorrelatedClusters_func( clus
 if strcmp(flags.Mask,'DMN') % DMN
     iCluster0 = 0;
     iSubMask0 = 0;
-    nSubMask = 16;
+    nSubMask = length(dmn_regions);
 else % DAN
-    iCluster0 = sum(cluster_idx(1:16));
-    iSubMask0 = 16;
-    nSubMask = 4;
+    iCluster0 = sum(cluster_idx(1:length(dmn_regions)));
+    iSubMask0 = length(dmn_regions);
+    nSubMask = length(dan_regions);
 end
 
 
