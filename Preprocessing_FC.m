@@ -26,6 +26,25 @@ mlActAuto = [];
 % Convert to dOD
 dod = hmrR_Intensity2OD( snirfObj.data );
 dodNP = dod;
+if strcmp(flags.macorrect,'splineSG')
+    % Find Motion Artifacts
+    % tIncAuto = hmrR_MotionArtifact(data, probe, mlActMan, mlActAuto, tIncMan, tMotion, tMask, STDEVthresh, AMPthresh)
+    tMotion = 0.5;
+    tMask = 0.5;
+    STDEVthresh = 40;
+    AMPthresh = 100;
+    % By channel
+    % [tInc, tIncCh] = hmrR_MotionArtifactByChannel(data, probe, mlActMan, mlActAuto, tIncMan, tMotion, tMask, std_thresh, amp_thresh)
+    [tInc, tIncCh] = hmrR_MotionArtifactByChannel(dod, snirfObj.probe, [], mlActAuto, [], tMotion, tMask, STDEVthresh, AMPthresh);
+
+    % motion artifacts correction
+    p =0.99;
+    turnon = 1;
+    FrameSize_sec = 10;    
+    %USAGE function data_d = hmrR_MotionCorrectSplineSG(data_d, mlActAuto, p, FrameSize_sec, turnon)
+    dod = hmrR_MotionCorrectSplineSG(dod, mlActAuto, p, FrameSize_sec, turnon);
+end
+
 if strcmp(flags.macorrect,'spline')
     % Find Motion Artifacts
     % tIncAuto = hmrR_MotionArtifact(data, probe, mlActMan, mlActAuto, tIncMan, tMotion, tMask, STDEVthresh, AMPthresh)
@@ -41,13 +60,9 @@ if strcmp(flags.macorrect,'spline')
     % motion artifacts correction
     p =0.99;
     turnon = 1;
-    FrameSize_sec = 10;
     %USAGE data_dod = hmrR_MotionCorrectSpline(data_dod, mlAct, tIncCh, p, turnon)
-    dod = hmrR_MotionCorrectSpline(dod, mlActAuto, tIncCh, p, turnon);
-    %USAGE function data_d = hmrR_MotionCorrectSplineSG(data_d, mlActAuto, p, FrameSize_sec, turnon)
-    %dod = hmrR_MotionCorrectSplineSG(dod, mlActAuto, p, FrameSize_sec, turnon);
+    dod = hmrR_MotionCorrectSpline(dod, mlActAuto, tIncCh, p, turnon);    
 end
-
 if strcmp(flags.bpfilt,'channel')
     % Band Pass Filter
     dod = hmrR_BandpassFilt( dod, 0.009, 0.080);

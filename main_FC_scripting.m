@@ -1,6 +1,6 @@
 %%
 clear all;
-OVERWRITE_ = 1;
+OVERWRITE_ = 0;
 
 [fwFolder,anatomFolder,derivFolder,dataDir] = setmyenv();
 
@@ -33,7 +33,7 @@ end
 %%
 iSubj = 3;
 %iRun = 1;
-%for iSubj = 1:nSubjs
+%for iSubj = 1:3
 for iRun=1:8
     subject = num2str(subjects_set(iSubj));
     fprintf('Subject %s------------------------\n',subject);
@@ -65,7 +65,7 @@ for iRun=1:8
     % use twindow.init_sec = -1 if you want to use the onset and duration
     % defined in the snirf file (assuming there is only one stimulus).
     % Otherwise, change the values (in sec.) according to your needs
-    twindoe.stim_name = 'RS';
+    twindow.stim_name = 'Passive';
     twindow.init_sec = -1;
     twindow.offset_sec = 0;
     %twindow.init_sec = 30;
@@ -97,26 +97,26 @@ end
 [HbR_brain_r1r8] = [HbR_brain_chunkr1;HbR_brain_chunkr2;HbR_brain_chunkr3;HbR_brain_chunkr4;HbR_brain_chunkr5;HbR_brain_chunkr6;HbR_brain_chunkr7;HbR_brain_chunkr8];
 seedsFolder ='/projectnb/nphfnirs/s/DATA_BU/2022/Rest_Movie_WorkingMemory/DataRSFC_Analysis/derivatives/rsfc/Pipeline-RS-macor-spline_bpfilt-image_imrec-brain+scalp_gsr-image_clust-1/';
 fOut_seeds ='reliability_RS-macor-spline_bpfilt-image_imrec-brain+scalp_gsr-image_clust-1';
-% load([seedsFolder,fOut_seeds,'.mat'],'rDMNDAN_AllSubj_hbo','rDMNDAN_AllSubj_hbr','flags', ...
-%         'dmn_seeds_NP_ts','dan_seeds_NP_ts','dmn_seeds_ts','dan_seeds_ts',...
-%         'dmn_improv_hbo','dan_improv_hbo','dmn_improv_hbr','dan_improv_hbr');
+load([seedsFolder,fOut_seeds,'.mat'],'rDMNDAN_AllSubj_hbo','rDMNDAN_AllSubj_hbr','flags', ...
+        'dmn_seeds_NP_ts','dan_seeds_NP_ts','dmn_seeds_ts','dan_seeds_ts',...
+        'dmn_improv_hbo','dan_improv_hbo','dmn_improv_hbr','dan_improv_hbr');
+
+dmn_improv_hbo = dmn_improv_hbo{iSubj};
+dmn_improv_hbr = dmn_improv_hbr{iSubj};
+dan_improv_hbo = dan_improv_hbo{iSubj};
+dan_improv_hbr = dan_improv_hbr{iSubj};
+
+% %%
+% [dmn_mask_hbo] = Clustering_FC(HbO_brain_r1r8,dmn_mask,flags);
+% [dmn_mask_hbr] = Clustering_FC(HbR_brain_r1r8,dmn_mask,flags);
 % 
-% dmn_improv_hbo = dmn_improv_hbo{iSubj};
-% dmn_improv_hbr = dmn_improv_hbr{iSubj};
-% dan_improv_hbo = dan_improv_hbo{iSubj};
-% dan_improv_hbr = dan_improv_hbr{iSubj};
-
-%%
-[dmn_mask_hbo] = Clustering_FC(HbO_brain_r1r8,dmn_mask,flags);
-[dmn_mask_hbr] = Clustering_FC(HbR_brain_r1r8,dmn_mask,flags);
-
-%%
-[dan_mask_hbo] = Clustering_FC(HbO_brain_r1r8,dan_mask,flags);
-[dan_mask_hbr] = Clustering_FC(HbR_brain_r1r8,dan_mask,flags);
-
-%%
-[~,dmn_improv_hbo,dan_improv_hbo,~] = ClusterSelection_FC(dmn_mask_hbo,dan_mask_hbo,HbO_brain_r1r8,flags);
-[~,dmn_improv_hbr,dan_improv_hbr,~] = ClusterSelection_FC(dmn_mask_hbr,dan_mask_hbr,HbR_brain_r1r8,flags);
+% %%
+% [dan_mask_hbo] = Clustering_FC(HbO_brain_r1r8,dan_mask,flags);
+% [dan_mask_hbr] = Clustering_FC(HbR_brain_r1r8,dan_mask,flags);
+% 
+% %%
+% [~,dmn_improv_hbo,dan_improv_hbo,~] = ClusterSelection_FC(dmn_mask_hbo,dan_mask_hbo,HbO_brain_r1r8,flags);
+% [~,dmn_improv_hbr,dan_improv_hbr,~] = ClusterSelection_FC(dmn_mask_hbr,dan_mask_hbr,HbR_brain_r1r8,flags);
 
 %%
 % HbO
@@ -138,8 +138,8 @@ f=figure;
 imagesc(corrcoef(BrainMaps_hbo),[-1,1]);
 colormap("jet");
 colorbar();
-title({sprintf('Subject %s DMN-DAN HbO Run 1-8',subject),pipeline_str},'Interpreter','none');
-saveas(f,[pipelineDir,fOut_map,'_Subj-',num2str(iSubj),'_WMseed_hbo.png']);
+title({sprintf('Subject %s DMN-DAN HbO Run 1-8',subject),twindow.stim_name,pipeline_str},'Interpreter','none');
+saveas(f,[pipelineDir,fOut_map,'_Subj-',num2str(iSubj),'_RSseed_',twindow.stim_name,'_hbo.png']);
 close(f);
 
 % hbr
@@ -159,6 +159,7 @@ f=figure;
 imagesc(corrcoef(BrainMaps_hbr),[-1,1]);
 colormap("jet");
 colorbar();
-title({sprintf('Subject %s DMN-DAN HbR Run 1-8',subject),pipeline_str},'Interpreter','none');
-saveas(f,[pipelineDir,fOut_map,'_Subj-',num2str(iSubj),'_WMseed_hbr.png']);
+title({sprintf('Subject %s DMN-DAN HbR Run 1-8',subject),twindow.stim_name,pipeline_str},'Interpreter','none');
+saveas(f,[pipelineDir,fOut_map,'_Subj-',num2str(iSubj),'_RSseed_',twindow.stim_name,'_hbr.png']);
 close(f);
+%end
