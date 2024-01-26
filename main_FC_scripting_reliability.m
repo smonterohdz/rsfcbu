@@ -1,7 +1,7 @@
 %%
 % test-retest reliability using individual imprpved seeds/submasks
 clear all;
-OVERWRITE_ = 1;
+OVERWRITE_ = 0;
 
 [fwFolder,anatomFolder,derivFolder,dataDir] = setmyenv();
 
@@ -182,10 +182,16 @@ else
         'dmn_seeds_NP_ts','dan_seeds_NP_ts','dmn_seeds_ts','dan_seeds_ts',...
         'dmn_improv_hbo','dan_improv_hbo','dmn_improv_hbr','dan_improv_hbr');
 end
-%%-
+%%
 %test-retest group
 fooHbO = rDMNDAN_AllSubj_hbo(1:20,21:end,:);
 fooHbR = rDMNDAN_AllSubj_hbr(1:20,21:end,:);
+
+[f1,f2]= plot_corrMat_FC(fooHbO,fooHbR,subjects_set);
+saveas(f1,[pipelineDir,'HbO_Subjects_CorrMat.png']);
+saveas(f2,[pipelineDir,'HbR_Subjects_CorrMat.png']);
+close(f1);
+close(f2);
 
 zHbO = 0.5 * log((1+fooHbO)./(1-fooHbO));
 zHbR = 0.5 * log((1+fooHbR)./(1-fooHbR));
@@ -267,4 +273,68 @@ saveas(hmap,[pipelineDir,fOut_pmap,'_dan_hbr.png']);
 close(hmap);
 
 %%
-% Seeds plots
+% Seeds/submasks plots 
+fs = 10.1725;
+f1=figure;
+hold on;
+t = tiledlayout('flow','TileSpacing','compact');
+for iSubj=1:nSubjs
+    %subplot(3,5,iSubj);
+    nexttile;
+    subject = num2str(subjects_set(iSubj));
+    % for iSeed=1:length(dmn_seeds_ts(:,1,iSubj))
+    %     plot(dmn_seeds_ts{iSeed,1,iSubj},'-','Color',[0.7 0.7 1]);
+    % end
+    plot(mean([dmn_seeds_ts{:,1,1}],2),'-','Color',[0.2 0.2 1]);    
+    hold on;
+    % for iSeed=1:length(dan_seeds_ts(:,1,iSubj))
+    %     plot(dan_seeds_ts{iSeed,1,iSubj},'-','Color',[1.0 0.8 0.0]);
+    % end
+    plot(mean([dan_seeds_ts{:,1,1}],2),'-','Color',[1.0 0.5 0.0]);
+    xlim([0 15000]);%round(5*60*fs)]);
+    title(['S',subject]);
+end
+sgtitle('HbO DMN and DAN average seed time courses');
+lgd=legend({'DMN','DAN'});
+lgd.Layout.Tile = 'east';
+f1.Position = [10         10        1049         507];
+saveas(f1,[pipelineDir,'HbODMN-DAN_seedTimecourses (0-5min).png']);
+close(f1);
+% Seeds plots 
+iSubj =1;
+f=figure;
+hold on;
+for iSeed=1:length(dmn_seeds_ts(:,1,iSubj))
+    plot(dmn_seeds_ts{iSeed,1,iSubj},'-','Color',[0.7 0.7 1]);
+end
+plot(mean([dmn_seeds_ts{:,1,1}],2),'-','Color',[0.2 0.2 1],'LineWidth',2.5);
+
+iSubj =1;
+hold on;
+for iSeed=1:length(dan_seeds_ts(:,1,iSubj))
+    plot(dan_seeds_ts{iSeed,1,iSubj},'-','Color',[1.0 0.8 0.0]);
+end
+plot(mean([dan_seeds_ts{:,1,1}],2),'-','Color',[1.0 0.5 0.0],'LineWidth',2.5);
+
+%% Plot anticorrelation
+f3=figure(3); 
+wind_min = 5;
+for iSubj=1:nSubjs
+    subject = num2str(subjects_set(iSubj));
+    dmn_mu = mean([dmn_seeds_ts{:,1,iSubj}],2);
+    dan_mu = mean([dan_seeds_ts{:,1,iSubj}],2);
+    r_seeds = [];
+    window_ = round(fs*60*wind_min);
+    for i=1:(length(dmn_mu)-window_)
+        r=corrcoef(dmn_mu(i:(i+window_)),dan_mu(i:(i+window_)));
+        r_seeds = [r_seeds;r(2)];
+    end
+    subplot(3,5,iSubj); 
+    plot(r_seeds)
+    ylim([-1 1]);
+    title(['S',subject]);
+end
+sgtitle(['HbO DMN-DAN Anticorrelation (',num2str(wind_min),' min)']);
+f3.Position = [10         10        1049         507];
+saveas(f3,[pipelineDir,'HbODMN-DAN_anticorr-',num2str(wind_min),'m.png']);
+close(f3);
