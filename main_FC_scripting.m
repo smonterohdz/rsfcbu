@@ -31,7 +31,7 @@ end
 [dmn_mask,dan_mask,mesh_brain,idx_select] = Parcellation_FC(anatomFolder,fwFolder);
 
 %%
-iSubj = 3;
+iSubj = 1;
 %iRun = 1;
 %for iSubj = 1:3
 for iRun=1:8
@@ -65,7 +65,7 @@ for iRun=1:8
     % use twindow.init_sec = -1 if you want to use the onset and duration
     % defined in the snirf file (assuming there is only one stimulus).
     % Otherwise, change the values (in sec.) according to your needs
-    twindow.stim_name = 'Passive';
+    twindow.stim_name = 'Active';
     twindow.init_sec = -1;
     twindow.offset_sec = 0;
     %twindow.init_sec = 30;
@@ -95,41 +95,43 @@ end
 % Do we want to concatenate runs?
 [HbO_brain_r1r8] = [HbO_brain_chunkr1;HbO_brain_chunkr2;HbO_brain_chunkr3;HbO_brain_chunkr4;HbO_brain_chunkr5;HbO_brain_chunkr6;HbO_brain_chunkr7;HbO_brain_chunkr8];
 [HbR_brain_r1r8] = [HbR_brain_chunkr1;HbR_brain_chunkr2;HbR_brain_chunkr3;HbR_brain_chunkr4;HbR_brain_chunkr5;HbR_brain_chunkr6;HbR_brain_chunkr7;HbR_brain_chunkr8];
-seedsFolder ='/projectnb/nphfnirs/s/DATA_BU/2022/Rest_Movie_WorkingMemory/DataRSFC_Analysis/derivatives/rsfc/Pipeline-RS-macor-spline_bpfilt-image_imrec-brain+scalp_gsr-image_clust-1/';
-fOut_seeds ='reliability_RS-macor-spline_bpfilt-image_imrec-brain+scalp_gsr-image_clust-1';
-load([seedsFolder,fOut_seeds,'.mat'],'rDMNDAN_AllSubj_hbo','rDMNDAN_AllSubj_hbr','flags', ...
-        'dmn_seeds_NP_ts','dan_seeds_NP_ts','dmn_seeds_ts','dan_seeds_ts',...
-        'dmn_improv_hbo','dan_improv_hbo','dmn_improv_hbr','dan_improv_hbr');
-
-dmn_improv_hbo = dmn_improv_hbo{iSubj};
-dmn_improv_hbr = dmn_improv_hbr{iSubj};
-dan_improv_hbo = dan_improv_hbo{iSubj};
-dan_improv_hbr = dan_improv_hbr{iSubj};
-
-% %%
-% [dmn_mask_hbo] = Clustering_FC(HbO_brain_r1r8,dmn_mask,flags);
-% [dmn_mask_hbr] = Clustering_FC(HbR_brain_r1r8,dmn_mask,flags);
+% seedsFolder ='/projectnb/nphfnirs/s/DATA_BU/2022/Rest_Movie_WorkingMemory/DataRSFC_Analysis/derivatives/rsfc/Pipeline-RS-macor-spline_bpfilt-image_imrec-brain+scalp_gsr-image_clust-1/';
+% fOut_seeds ='reliability_RS-macor-spline_bpfilt-image_imrec-brain+scalp_gsr-image_clust-1';
+% load([seedsFolder,fOut_seeds,'.mat'],'rDMNDAN_AllSubj_hbo','rDMNDAN_AllSubj_hbr','flags', ...
+%         'dmn_seeds_NP_ts','dan_seeds_NP_ts','dmn_seeds_ts','dan_seeds_ts',...
+%         'dmn_improv_hbo','dan_improv_hbo','dmn_improv_hbr','dan_improv_hbr');
 % 
-% %%
-% [dan_mask_hbo] = Clustering_FC(HbO_brain_r1r8,dan_mask,flags);
-% [dan_mask_hbr] = Clustering_FC(HbR_brain_r1r8,dan_mask,flags);
-% 
-% %%
-% [~,dmn_improv_hbo,dan_improv_hbo,~] = ClusterSelection_FC(dmn_mask_hbo,dan_mask_hbo,HbO_brain_r1r8,flags);
-% [~,dmn_improv_hbr,dan_improv_hbr,~] = ClusterSelection_FC(dmn_mask_hbr,dan_mask_hbr,HbR_brain_r1r8,flags);
+% dmn_improv_hbo = dmn_improv_hbo{iSubj};
+% dmn_improv_hbr = dmn_improv_hbr{iSubj};
+% dan_improv_hbo = dan_improv_hbo{iSubj};
+% dan_improv_hbr = dan_improv_hbr{iSubj};
+
+%%
+[dmn_mask_hbo] = Clustering_FC(HbO_brain_r1r8,dmn_mask,flags);
+[dmn_mask_hbr] = Clustering_FC(HbR_brain_r1r8,dmn_mask,flags);
+
+%%
+[dan_mask_hbo] = Clustering_FC(HbO_brain_r1r8,dan_mask,flags);
+[dan_mask_hbr] = Clustering_FC(HbR_brain_r1r8,dan_mask,flags);
+
+%%
+[~,dmn_improv_hbo,dan_improv_hbo,~] = ClusterSelection_FC(dmn_mask_hbo,dan_mask_hbo,HbO_brain_r1r8,flags);
+[~,dmn_improv_hbr,dan_improv_hbr,~] = ClusterSelection_FC(dmn_mask_hbr,dan_mask_hbr,HbR_brain_r1r8,flags);
 
 %%
 % HbO
 BrainMaps_hbo = zeros(length(idx_select),1*(length(dmn_improv_hbo)+length(dan_improv_hbo)));
+dmn_hbo_ts = zeros(size(HbO_brain_r1r8,1),16);
+dan_hbo_ts = zeros(size(HbO_brain_r1r8,1),4);
 for iSubmask=1:length(dmn_improv_hbo)
     %obtain the correlation brain map after preprocessing and by using the
     %seed passed as the first argument.
-    [~,hmap1,A_select1] = CorrelationBrainMap_FC(dmn_improv_hbo(iSubmask),mesh_brain,idx_select,HbO_brain_r1r8,flags.p_thresh,flags.plot);    
+    [dmn_hbo_ts(:,iSubmask),hmap1,A_select1] = CorrelationBrainMap_FC(dmn_improv_hbo(iSubmask),mesh_brain,idx_select,HbO_brain_r1r8,flags.p_thresh,flags.plot);    
     BrainMaps_hbo(:,iSubmask) = A_select1;
     fprintf('(hbo)DMN submask %i of %i\n',iSubmask,length(dmn_improv_hbo));
 end
 for iSubmask=1:length(dan_improv_hbo)
-    [~,hmap1,A_select1] = CorrelationBrainMap_FC(dan_improv_hbo(iSubmask),mesh_brain,idx_select,HbO_brain_r1r8,flags.p_thresh,flags.plot);
+    [dan_hbo_ts(:,iSubmask),hmap1,A_select1] = CorrelationBrainMap_FC(dan_improv_hbo(iSubmask),mesh_brain,idx_select,HbO_brain_r1r8,flags.p_thresh,flags.plot);
     BrainMaps_hbo(:,length(dmn_improv_hbo)+iSubmask) = A_select1;
     fprintf('(hbo)DAN submask %i of %i\n',iSubmask,length(dan_improv_hbo));
 end
@@ -139,7 +141,20 @@ imagesc(corrcoef(BrainMaps_hbo),[-1,1]);
 colormap("jet");
 colorbar();
 title({sprintf('Subject %s DMN-DAN HbO Run 1-8',subject),twindow.stim_name,pipeline_str},'Interpreter','none');
-saveas(f,[pipelineDir,fOut_map,'_Subj-',num2str(iSubj),'_RSseed_',twindow.stim_name,'_hbo.png']);
+saveas(f,[pipelineDir,fOut_map,'_Subj-',num2str(iSubj),'_WMseed_',twindow.stim_name,'_hbo.png']);
+close(f);
+
+f=figure;
+plot(mean(dmn_hbo_ts,2),'-','Color',[0 0 1],'LineWidth',2.5);
+hold on;
+plot(mean(dan_hbo_ts,2),'-','Color',[1 0 0],'LineWidth',2.5);
+plot(dmn_hbo_ts,'-','Color',[0.7 0.7 1]);
+plot(dan_hbo_ts,'-','Color',[1 0.7 0.7]);
+xlabel('Samples');
+ylabel('\Delta HbO')
+legend({'avg DMN','avg DAN'});
+title({sprintf('Subject %s DMN-DAN HbO time courses',subject),twindow.stim_name,pipeline_str},'Interpreter','none');
+saveas(f,[pipelineDir,fOut_map,'_Subj-',num2str(iSubj),'_WMseed_',twindow.stim_name,'_hbo_ts.png']);
 close(f);
 
 % hbr
@@ -160,6 +175,6 @@ imagesc(corrcoef(BrainMaps_hbr),[-1,1]);
 colormap("jet");
 colorbar();
 title({sprintf('Subject %s DMN-DAN HbR Run 1-8',subject),twindow.stim_name,pipeline_str},'Interpreter','none');
-saveas(f,[pipelineDir,fOut_map,'_Subj-',num2str(iSubj),'_RSseed_',twindow.stim_name,'_hbr.png']);
+saveas(f,[pipelineDir,fOut_map,'_Subj-',num2str(iSubj),'_WMseed_',twindow.stim_name,'_hbr.png']);
 close(f);
 %end
