@@ -1,4 +1,4 @@
-function [fwFolder,anatomFolder,derivFolder,dataDir] = setmyenv()
+function [fwFolder,anatomFolder,derivFolder,dataDir] = setmyenv(flags)
 %Sets my environment (paths, etc.)
 %   Detailed explanation goes here
 if isunix()
@@ -10,8 +10,13 @@ if isunix()
     if isempty(which('Homer3'))
         mypwd=pwd;cd('../homer3_repo/');setpaths;cd(mypwd);
     end
-    fwFolder = '/projectnb/nphfnirs/s/DATA_BU/2022/Rest_Movie_WorkingMemory/DataRSFC_Analysis/fw/';
-    anatomFolder = '/projectnb/nphfnirs/s/DATA_BU/2022/Rest_Movie_WorkingMemory/DataRSFC_Analysis/probe_10MPhotons/anatomical/';
+    if strcmp(flags.parc_scheme,'aal')
+        fwFolder = '/projectnb/nphfnirs/s/DATA_BU/2022/Rest_Movie_WorkingMemory/DataRSFC_Analysis/fw/';
+        anatomFolder = '/projectnb/nphfnirs/s/DATA_BU/2022/Rest_Movie_WorkingMemory/DataRSFC_Analysis/probe_10MPhotons/anatomical/';
+    elseif strcmp(flags.parc_scheme,'schaefer')
+        fwFolder = '/projectnb/nphfnirs/s/DATA_BU/2022/Rest_Movie_WorkingMemory/DataRSFC_Analysis/fw/';
+        anatomFolder = '/projectnb/nphfnirs/s/DATA_BU/2022/Rest_Movie_WorkingMemory/DataRSFC_Analysis/probe_10MPhotons/anatomical/';
+    end
     derivFolder = '/projectnb/nphfnirs/s/DATA_BU/2022/Rest_Movie_WorkingMemory/DataRSFC_Analysis/derivatives/rsfc/';
     dataDir = '/projectnb/nphfnirs/s/DATA_BU/2022/Rest_Movie_WorkingMemory/DataRSFC_Analysis/';
 end
@@ -30,8 +35,14 @@ if ispc()
     if isempty(which('AtlasViewerGUI'))
         mypwd = pwd;cd([HD_,':\atlasViewer-repo\']);setpaths;cd(mypwd);
     end
-    fwFolder = ['C:\Users\',usrname,'\OneDrive - Boston University\RS_MovieWatching\Rest_Movie_WorkingMemory\fw\'];
-    anatomFolder = ['C:\Users\',usrname,'\OneDrive - Boston University\RS_MovieWatching\Rest_Movie_WorkingMemory\probe_10MPhotons\anatomical\'];
+    if strcmp(flags.parcel_scheme,'aal')
+        fwFolder = ['C:\Users\',usrname,'\OneDrive - Boston University\RS_MovieWatching\Rest_Movie_WorkingMemory\fw\'];
+        anatomFolder = ['C:\Users\',usrname,'\OneDrive - Boston University\RS_MovieWatching\Rest_Movie_WorkingMemory\probe_10MPhotons\anatomical\'];
+    elseif strcmp(flags.parcel_scheme,'schaefer')
+        fwFolder = ['C:\Users\',usrname,'\OneDrive - Boston University\RS_MovieWatching\Rest_Movie_WorkingMemory\probe_schaefer\fw\'];
+        anatomFolder = ['C:\Users\',usrname,'\OneDrive - Boston University\RS_MovieWatching\Rest_Movie_WorkingMemory\probe_schaefer\anatomical\'];
+    end
+  
     derivFolder = ['C:\Users\',usrname,'\OneDrive - Boston University\RS_MovieWatching\Rest_Movie_WorkingMemory\derivatives\rsfc\'];
     dataDir = ['C:\Users\',usrname,'\OneDrive - Boston University\RS_MovieWatching\Rest_Movie_WorkingMemory\'];
 end

@@ -31,7 +31,7 @@ end
 [dmn_mask,dan_mask,mesh_brain,idx_select] = Parcellation_FC(anatomFolder,fwFolder);
 
 %%
-iSubj = 1;
+iSubj = 2;
 %iRun = 1;
 %for iSubj = 1:3
 for iRun=1:8
@@ -60,12 +60,25 @@ for iRun=1:8
     eval(sprintf("[HbO_brainr%i,HbR_brainr%i] = ImageReconstruction_FC(snirfObjr%i,dodObjr%i,dcObjr%i,fwFolder,flags);",iRun,iRun,iRun,iRun,iRun));
     % Do I want to visualize HbO from the Image recon?
     %checkImg_FC(fwFolder,HbO_brainr1,dodObjr1.time);
-
+    %% Band pass filtering in image space
+    if strcmp(flags.bpfilt,'image')
+        %[y2] = image_BandpassFilt(y,hpf,lpf,fs)
+        fs = mean(1./diff(snirfObjr1.data.time));
+        eval(sprintf("HbO_brainr%i = image_BandpassFilt(HbO_brainr%i, 0.009, 0.080,fs);",iRun,iRun));
+        eval(sprintf("HbR_brainr%i = image_BandpassFilt(HbR_brainr%i, 0.009, 0.080,fs);",iRun,iRun));
+    end
+    % Global signal regression in image space?
+    if strcmp(flags.gsr,'image') && ~strcmp(flags.bpfilt,'none')
+        eval(sprintf("HbO_brainr%i = GlobalRegression(HbO_brainr%i);",iRun,iRun));
+        eval(sprintf("HbR_brainr%i = GlobalRegression(HbR_brainr%i);",iRun,iRun));
+        % HbO_brain_chunkr2 = GlobalRegression(HbO_brain_chunkr2);
+        % HbR_brain_chunkr2 = GlobalRegression(HbR_brain_chunkr2);
+    end
     %%
     % use twindow.init_sec = -1 if you want to use the onset and duration
     % defined in the snirf file (assuming there is only one stimulus).
     % Otherwise, change the values (in sec.) according to your needs
-    twindow.stim_name = 'Active';
+    twindow.stim_name = 'baseline';
     twindow.init_sec = -1;
     twindow.offset_sec = 0;
     %twindow.init_sec = 30;
@@ -76,25 +89,26 @@ for iRun=1:8
     %[HbR_brain_chunkr1] = ExctractChunk(HbR_brainr1,snirfObjr1,twindow,flags);
 
 
-    % Band pass filtering in image space
-    if strcmp(flags.bpfilt,'image')
-        %[y2] = image_BandpassFilt(y,hpf,lpf,fs)
-        fs = mean(1./diff(snirfObjr1.data.time));
-        eval(sprintf("HbO_brain_chunkr%i = image_BandpassFilt(HbO_brain_chunkr%i, 0.009, 0.080,fs);",iRun,iRun));
-        eval(sprintf("HbR_brain_chunkr%i = image_BandpassFilt(HbR_brain_chunkr%i, 0.009, 0.080,fs);",iRun,iRun));
-    end
-    % Global signal regression in image space?
-    if strcmp(flags.gsr,'image') && ~strcmp(flags.bpfilt,'none')
-        eval(sprintf("HbO_brain_chunkr%i = GlobalRegression(HbO_brain_chunkr%i);",iRun,iRun));
-        eval(sprintf("HbR_brain_chunkr%i = GlobalRegression(HbR_brain_chunkr%i);",iRun,iRun));
-        % HbO_brain_chunkr2 = GlobalRegression(HbO_brain_chunkr2);
-        % HbR_brain_chunkr2 = GlobalRegression(HbR_brain_chunkr2);
-    end
+   
 end
 %%
 % Do we want to concatenate runs?
-[HbO_brain_r1r8] = [HbO_brain_chunkr1;HbO_brain_chunkr2;HbO_brain_chunkr3;HbO_brain_chunkr4;HbO_brain_chunkr5;HbO_brain_chunkr6;HbO_brain_chunkr7;HbO_brain_chunkr8];
-[HbR_brain_r1r8] = [HbR_brain_chunkr1;HbR_brain_chunkr2;HbR_brain_chunkr3;HbR_brain_chunkr4;HbR_brain_chunkr5;HbR_brain_chunkr6;HbR_brain_chunkr7;HbR_brain_chunkr8];
+[HbO_brain_r1r8] = [HbO_brain_chunkr1-mean(HbO_brain_chunkr1);
+    HbO_brain_chunkr2-mean(HbO_brain_chunkr2);
+    HbO_brain_chunkr3-mean(HbO_brain_chunkr3);
+    HbO_brain_chunkr4-mean(HbO_brain_chunkr4);
+    HbO_brain_chunkr5-mean(HbO_brain_chunkr5);
+    HbO_brain_chunkr6-mean(HbO_brain_chunkr6);
+    HbO_brain_chunkr7-mean(HbO_brain_chunkr7);
+    HbO_brain_chunkr8-mean(HbO_brain_chunkr8);];
+[HbR_brain_r1r8] = [HbR_brain_chunkr1-mean(HbR_brain_chunkr1);
+    HbR_brain_chunkr2-mean(HbR_brain_chunkr2);
+    HbR_brain_chunkr3-mean(HbR_brain_chunkr3);
+    HbR_brain_chunkr4-mean(HbR_brain_chunkr4);
+    HbR_brain_chunkr5-mean(HbR_brain_chunkr5);
+    HbR_brain_chunkr6-mean(HbR_brain_chunkr6);
+    HbR_brain_chunkr7-mean(HbR_brain_chunkr7);
+    HbR_brain_chunkr8-mean(HbR_brain_chunkr8)];
 % seedsFolder ='/projectnb/nphfnirs/s/DATA_BU/2022/Rest_Movie_WorkingMemory/DataRSFC_Analysis/derivatives/rsfc/Pipeline-RS-macor-spline_bpfilt-image_imrec-brain+scalp_gsr-image_clust-1/';
 % fOut_seeds ='reliability_RS-macor-spline_bpfilt-image_imrec-brain+scalp_gsr-image_clust-1';
 % load([seedsFolder,fOut_seeds,'.mat'],'rDMNDAN_AllSubj_hbo','rDMNDAN_AllSubj_hbr','flags', ...
@@ -123,6 +137,8 @@ end
 BrainMaps_hbo = zeros(length(idx_select),1*(length(dmn_improv_hbo)+length(dan_improv_hbo)));
 dmn_hbo_ts = zeros(size(HbO_brain_r1r8,1),16);
 dan_hbo_ts = zeros(size(HbO_brain_r1r8,1),4);
+dmn_hbr_ts = dmn_hbo_ts;
+dan_hbr_ts = dan_hbo_ts;
 for iSubmask=1:length(dmn_improv_hbo)
     %obtain the correlation brain map after preprocessing and by using the
     %seed passed as the first argument.
@@ -160,12 +176,12 @@ close(f);
 % hbr
 BrainMaps_hbr = zeros(length(idx_select),1*(length(dmn_improv_hbr)+length(dan_improv_hbr)));
 for iSubmask=1:length(dmn_improv_hbr)
-    [~,hmap1,A_select1] = CorrelationBrainMap_FC(dmn_improv_hbr(iSubmask),mesh_brain,idx_select,HbR_brain_r1r8,flags.p_thresh,flags.plot);
+    [dmn_hbr_ts(:,iSubmask),hmap1,A_select1] = CorrelationBrainMap_FC(dmn_improv_hbr(iSubmask),mesh_brain,idx_select,HbR_brain_r1r8,flags.p_thresh,flags.plot);
     BrainMaps_hbr(:,iSubmask) = A_select1;
     fprintf('(hbr)DMN submask %i of %i\n',iSubmask,length(dmn_improv_hbr));
 end
 for iSubmask=1:length(dan_improv_hbr)
-    [~,hmap1,A_select1] = CorrelationBrainMap_FC(dan_improv_hbr(iSubmask),mesh_brain,idx_select,HbR_brain_r1r8,flags.p_thresh,flags.plot);
+    [dan_hbr_ts(:,iSubmask),hmap1,A_select1] = CorrelationBrainMap_FC(dan_improv_hbr(iSubmask),mesh_brain,idx_select,HbR_brain_r1r8,flags.p_thresh,flags.plot);
     BrainMaps_hbr(:,length(dmn_improv_hbr)+iSubmask) = A_select1;
     fprintf('(hbr)DAN submask %i of %i\n',iSubmask,length(dan_improv_hbr));
 end
@@ -177,4 +193,18 @@ colorbar();
 title({sprintf('Subject %s DMN-DAN HbR Run 1-8',subject),twindow.stim_name,pipeline_str},'Interpreter','none');
 saveas(f,[pipelineDir,fOut_map,'_Subj-',num2str(iSubj),'_WMseed_',twindow.stim_name,'_hbr.png']);
 close(f);
+
+f=figure;
+plot(mean(dmn_hbr_ts,2),'-','Color',[0 0 1],'LineWidth',2.5);
+hold on;
+plot(mean(dan_hbr_ts,2),'-','Color',[1 0 0],'LineWidth',2.5);
+plot(dmn_hbr_ts,'-','Color',[0.7 0.7 1]);
+plot(dan_hbr_ts,'-','Color',[1 0.7 0.7]);
+xlabel('Samples');
+ylabel('\Delta HbR')
+legend({'avg DMN','avg DAN'});
+title({sprintf('Subject %s DMN-DAN HbR time courses',subject),twindow.stim_name,pipeline_str},'Interpreter','none');
+saveas(f,[pipelineDir,fOut_map,'_Subj-',num2str(iSubj),'_WMseed_',twindow.stim_name,'_hbr_ts.png']);
+close(f);
+
 %end

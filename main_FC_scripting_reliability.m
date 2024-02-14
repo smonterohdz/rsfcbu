@@ -1,9 +1,7 @@
 %%
 % test-retest reliability using individual imprpved seeds/submasks
 clear all;
-OVERWRITE_ = 0;
-
-[fwFolder,anatomFolder,derivFolder,dataDir] = setmyenv();
+OVERWRITE_ = 1;
 
 subjects_set = [1:7 9:16];
 nSubjs=length(subjects_set);
@@ -15,11 +13,6 @@ dmn_improv_hbr = cell(nSubjs,1);
 dan_improv_hbr = cell(nSubjs,1);
 rDMNDAN_AllSubj_hbo = zeros(40,40,nSubjs);
 rDMNDAN_AllSubj_hbr = zeros(40,40,nSubjs);
-[dmn_mask,dan_mask,mesh_brain,idx_select] = Parcellation_FC(anatomFolder,fwFolder);
-dmn_seeds_ts = cell(length(dmn_mask),2,nSubjs);
-dan_seeds_ts = cell(length(dan_mask),2,nSubjs);
-dmn_seeds_NP_ts = cell(length(dmn_mask),2,nSubjs);
-dan_seeds_NP_ts = cell(length(dan_mask),2,nSubjs);
 
 
 % flags and thresholds
@@ -33,8 +26,22 @@ flags.plot=0; % .plot  flag to plot the brain correlation map
 flags.p_thresh = 0; % . p_thresh is used to plot r values below that p-val (use 0 to plot all the correlations)
 flags.clusteringType = 1; %1:Matlab, 2:David's algorithm
 flags.task = 'RS';
-pipeline_str = sprintf('%s-macor-%s_bpfilt-%s_imrec-%s_gsr-%s_clust-%i',...
-    flags.task,flags.macorrect,flags.bpfilt,flags.imagerecon,flags.gsr,flags.clusteringType);
+flags.parcel_scheme = 'schaefer';
+
+[fwFolder,anatomFolder,derivFolder,dataDir] = setmyenv(flags);
+
+[dmn_mask,dan_mask,mesh_brain,idx_select] = Parcellation_test_FC(anatomFolder,fwFolder,flags);
+plot_net_mask(mesh_brain,idx_select,dmn_mask);
+plot_net_mask(mesh_brain,idx_select,dan_mask);
+
+dmn_seeds_ts = cell(length(dmn_mask),2,nSubjs);
+dan_seeds_ts = cell(length(dan_mask),2,nSubjs);
+dmn_seeds_NP_ts = cell(length(dmn_mask),2,nSubjs);
+dan_seeds_NP_ts = cell(length(dan_mask),2,nSubjs);
+
+pipeline_str = sprintf('%s-macor-%s_bpfilt-%s_imrec-%s_gsr-%s_clust-%i_parcel-%s',...
+    flags.task,flags.macorrect,flags.bpfilt,flags.imagerecon,flags.gsr, ...
+    flags.clusteringType,flags.parcel_scheme);
 fOut_reliability=sprintf('reliability_%s',pipeline_str);
 fOut_pmap=sprintf('probMap_%s',pipeline_str);
 pipelineDir = sprintf('%sPipeline-%s/',derivFolder,pipeline_str);
@@ -61,7 +68,8 @@ if OVERWRITE_ || ~exist([pipelineDir,fOut_reliability,'.mat'],'file')
         %no processing
         [HbO_r1NP,HbR_r1NP] = ImageReconstruction_FC(snirfObjr1,dodr1NP,dcr1NP,fwFolder,flags);
         [HbO_r2NP,HbR_r2NP] = ImageReconstruction_FC(snirfObjr2,dodr2NP,dcr2NP,fwFolder,flags);
-
+        % Do I want to visualize HbO from the Image recon?
+        %checkImg_FC(fwFolder,HbO_brainr1,dodObjr1.time);
         %%
         % use twindow.init_sec = -1 if you want to use the onset and duration
         % defined in the snirf file (assuming there is only one stimulus).
@@ -106,16 +114,21 @@ if OVERWRITE_ || ~exist([pipelineDir,fOut_reliability,'.mat'],'file')
         [HbO_brain_r1r2] = [HbO_brain_chunkr1;HbO_brain_chunkr2];
         [HbR_brain_r1r2] = [HbR_brain_chunkr1;HbR_brain_chunkr2];
         %%
-        [dmn_mask_hbo] = Clustering_FC(HbO_brain_r1r2,dmn_mask,flags);
-        [dmn_mask_hbr] = Clustering_FC(HbR_brain_r1r2,dmn_mask,flags);
+        % [dmn_mask_hbo] = Clustering_FC(HbO_brain_r1r2,dmn_mask,flags);
+        % [dmn_mask_hbr] = Clustering_FC(HbR_brain_r1r2,dmn_mask,flags);
+        [dmn_improv_hbo{iSubj}] = dmn_mask;
+        [dmn_improv_hbr{iSubj}] = dmn_mask;
 
         %%
-        [dan_mask_hbo] = Clustering_FC(HbO_brain_r1r2,dan_mask,flags);
-        [dan_mask_hbr] = Clustering_FC(HbR_brain_r1r2,dan_mask,flags);
+        % [dan_mask_hbo] = Clustering_FC(HbO_brain_r1r2,dan_mask,flags);
+        % [dan_mask_hbr] = Clustering_FC(HbR_brain_r1r2,dan_mask,flags);
+        [dan_improv_hbo{iSubj}] = dan_mask;
+        [dan_improv_hbr{iSubj}] = dan_mask;
 
         %%
-        [~,dmn_improv_hbo{iSubj},dan_improv_hbo{iSubj},~] = ClusterSelection_FC(dmn_mask_hbo,dan_mask_hbo,HbO_brain_r1r2,flags);
-        [~,dmn_improv_hbr{iSubj},dan_improv_hbr{iSubj},~] = ClusterSelection_FC(dmn_mask_hbr,dan_mask_hbr,HbR_brain_r1r2,flags);
+        % [~,dmn_improv_hbo{iSubj},dan_improv_hbo{iSubj},~] = ClusterSelection_FC(dmn_mask_hbo,dan_mask_hbo,HbO_brain_r1r2,flags);
+        % [~,dmn_improv_hbr{iSubj},dan_improv_hbr{iSubj},~] = ClusterSelection_FC(dmn_mask_hbr,dan_mask_hbr,HbR_brain_r1r2,flags);
+        
 
         %%
         % HbO

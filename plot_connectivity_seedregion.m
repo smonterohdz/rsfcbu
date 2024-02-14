@@ -52,7 +52,7 @@ for i=1:5
         if size(seed,2)==3 %if columns are 3, then it contains coordinates. plot with plot3
             plot3(seed(:,axes_order(1)),seed(:,axes_order(2)),seed(:,axes_order(3)),'g.','MarkerSize',10)
         elseif size(seed',2)==1
-            A(seed) = -21;
+            A(seed) = -21;%mean(color_bar_range);%-21;
             if ~isempty(mask_idx)
                 nonmask_idx = 1:length(A);
                 nonmask_idx(mask_idx) =[];
@@ -89,7 +89,7 @@ for i=1:5
         vmax = max(A);
         clim([-vmax, vmax]);
         if ~isempty(seed) && size(seed',2)==1
-            myColorMap=[0,1,0;flipud(cbrewer('div','RdBu',256))];
+            myColorMap=[0,1,0;0,1,0;0,1,0;0,1,0;0,1,0;0,1,0;0,1,0;flipud(cbrewer('div','RdBu',256))];
         else
             myColorMap=flipud(cbrewer('div','RdBu',256));
         end

@@ -1,4 +1,4 @@
-function [dmn_regions,dan_regions,mesh_brain,idx_select] = Parcellation_FC(anatomFolder,fwFolder)
+function [dmn_regions,dan_regions,mesh_brain,idx_select] = Parcellation_FC(anatomFolder,fwFolder,flags)
 %UNTITLED3 Summary of this function goes here
 %   Detailed explanation goes here
 
@@ -12,8 +12,19 @@ idx_select = find(index_select);
 load([fwFolder, 'mesh_brain.mat'],'mesh');
 mesh_brain = mesh;
 
+
+Adot_select = Adot(:,index_select,1);
+Adot_new = zeros(size(Adot(:,:,1)));
+Adot_new(:,index_select,:) = Adot_select(:,:,1);
+A = log10(sum(Adot_new(:,:,1),1));
+figure;
+plot_sensitivity(mesh_brain,A, [-2 0])
+
+
 %load transformation matrix and labels
 T_2vol = load([anatomFolder 'labelssurf2vol.txt'],'ascii');
+
+
 load([anatomFolder 'labelssurf.mat'],'aal_fv','aal_ll');
 
 fv = struct('vertices',[],'faces',[],'idxlab',[]);

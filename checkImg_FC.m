@@ -10,7 +10,8 @@ index_select = log10(sum(Adot(:,:,1),1))>=-2;
 idx_select = find(index_select);
 
 % Load brain mesh
-load([fwFolder, 'mesh_brain.mat'],'mesh');
+load([fwFolder, 'mesh_brain.mat'],'mesh_brain');
+mesh = mesh_brain;
 f = mesh.faces;
 v = mesh.vertices;
 xImg = zeros(size(HbX,1),size(v,1));
@@ -22,8 +23,8 @@ figure();
  colormap('jet');
 % clim([vmax -vmax]);
 % hold on;
-for ii=find(xtime>60,1):11:floor(length(xtime))
-    %ii=find(xtime>86.6,1);
+%for ii=find(xtime>60,1):11:floor(length(xtime))
+    ii=find(xtime>86.6,1);
     hf=trisurf( f, v(:,axes_order(1)), v(:,axes_order(2)), v(:,axes_order(3)), xImg(ii,:), ...
         'facecolor','interp','edgecolor','flat','edgealpha',0, 'visible','on');
     campos([-2238.8, 132.0, 130.0]);%campos([130.3    278.7    1867.4]);%
@@ -32,5 +33,5 @@ for ii=find(xtime>60,1):11:floor(length(xtime))
     vmax = min(xImg(ii,:),[],'all');
     clim([vmax -vmax]);
     pause(0.005);
-end  
+%end  
 end
