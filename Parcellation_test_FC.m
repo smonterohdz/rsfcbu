@@ -16,7 +16,7 @@ A = log10(sum(Adot_new(:,:,1),1));
 % Load brain mesh
 load([fwFolder, 'mesh_brain.mat'],'mesh_brain');
 figure;
-plot_sensitivity(mesh_brain,A, [-2 0])
+plot_sensitivity(mesh_brain,A, [-2 2])
 
 
 
@@ -25,8 +25,8 @@ load([fwFolder,'schaeferParcels.mat'],'rhParcelsDMN','lhParcelsDMN','rhParcelsDA
 
 %read left and right hemispheres and concatenate the vertices and faces.
 % load schaefer parcels
-[vl,fl]=read_surf([fwFolder,'..\segment\lh.pial']);
-[vr,fr]=read_surf([fwFolder,'..\segment\rh.pial']);
+[vl,fl]=read_surf([fwFolder,'/segment/lh.pial']);
+[vr,fr]=read_surf([fwFolder,'/segment/rh.pial']);
 v = [vr;vl];
 f = [fr;(fl+size(vr,1))];
 

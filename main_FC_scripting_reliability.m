@@ -11,8 +11,8 @@ dmn_improv_hbo = cell(nSubjs,1);
 dan_improv_hbo = cell(nSubjs,1);
 dmn_improv_hbr = cell(nSubjs,1);
 dan_improv_hbr = cell(nSubjs,1);
-rDMNDAN_AllSubj_hbo = zeros(40,40,nSubjs);
-rDMNDAN_AllSubj_hbr = zeros(40,40,nSubjs);
+rDMNDAN_AllSubj_hbo = zeros(274,274,nSubjs);
+rDMNDAN_AllSubj_hbr = zeros(274,274,nSubjs);
 
 
 % flags and thresholds
@@ -31,6 +31,8 @@ flags.parcel_scheme = 'schaefer';
 [fwFolder,anatomFolder,derivFolder,dataDir] = setmyenv(flags);
 
 [dmn_mask,dan_mask,mesh_brain,idx_select] = Parcellation_test_FC(anatomFolder,fwFolder,flags);
+nparcelsdmn = length(dmn_mask);
+nparcelsdan = length(dan_mask);
 plot_net_mask(mesh_brain,idx_select,dmn_mask);
 plot_net_mask(mesh_brain,idx_select,dan_mask);
 
@@ -51,7 +53,7 @@ end
 
 %%
 if OVERWRITE_ || ~exist([pipelineDir,fOut_reliability,'.mat'],'file')
-    for iSubj = 1:nSubjs
+    for iSubj = 14:nSubjs
         subject = num2str(subjects_set(iSubj));
         fprintf('==============================\n');
         fprintf('Subject %s\n',subject);
@@ -197,8 +199,8 @@ else
 end
 %%
 %test-retest group
-fooHbO = rDMNDAN_AllSubj_hbo(1:20,21:end,:);
-fooHbR = rDMNDAN_AllSubj_hbr(1:20,21:end,:);
+fooHbO = rDMNDAN_AllSubj_hbo(1:(nparcelsdmn+nparcelsdan),(nparcelsdmn+nparcelsdan+1):end,:);
+fooHbR = rDMNDAN_AllSubj_hbr(1:(nparcelsdmn+nparcelsdan),(nparcelsdmn+nparcelsdan+1):end,:);
 
 [f1,f2]= plot_corrMat_FC(fooHbO,fooHbR,subjects_set);
 saveas(f1,[pipelineDir,'HbO_Subjects_CorrMat.png']);
