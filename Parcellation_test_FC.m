@@ -16,7 +16,7 @@ A = log10(sum(Adot_new(:,:,1),1));
 % Load brain mesh
 load([fwFolder, 'mesh_brain.mat'],'mesh_brain');
 figure;
-plot_sensitivity(mesh_brain,A, [-2 0])
+plot_sensitivity(mesh_brain,A, [-2 2])
 
 
 
