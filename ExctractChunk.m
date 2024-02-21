@@ -4,7 +4,14 @@ function [HbXBrain_chunk] = ExctractChunk(HbXBrain,snirfObj,twindow,flags)
 HbXBrain_chunk = [];
 t_chunk = [];
 if ~isfield(twindow,'stim_name')
-    twindow.stim_name = snirfObj.stim(1).name;
+    if length(snirfObj.stim)>=1
+        twindow.stim_name = snirfObj.stim(1).name;
+    else
+        stim_ = StimClass(15,'RS');
+        stim_.SetDuration(round(snirfObj.data.time(end)-30));
+        snirfObj.stim(1) = stim_;
+        twindow.stim_name = snirfObj.stim(1).name;
+    end
 end
 
 if ~isfield(twindow,'offset_sec') || isempty(twindow.offset_sec)||twindow.offset_sec<1

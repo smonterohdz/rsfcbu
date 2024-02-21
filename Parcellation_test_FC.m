@@ -1,4 +1,4 @@
-function [dmn_regions,dan_regions,mesh_brain,idx_select] = Parcellation_test_FC(anatomFolder,fwFolder,flags)
+function [dmn_regions,dan_regions,mesh_brain,idx_select,dmn_zero_v,dan_zero_v] = Parcellation_test_FC(anatomFolder,fwFolder,flags)
 %UNTITLED3 Summary of this function goes here
 %   Detailed explanation goes here
 
@@ -48,10 +48,13 @@ dan_regions = struct('name',[],'vertices',[],'vertices_index',[]);
 zeros_r = zeros(length(vr),1);
 zeros_l = zeros(length(vl),1);
 k = 1;
+dmn_zero_v = [];
+dan_zero_v = [];
 for iParcel =1:nParcelsDMNr
         dmn_regions(k).name = rhParcelsDMN{iParcel,1};
         current_mask = [rhParcelsDMN{iParcel,2};zeros_l];
         dmn_regions(k).vertices_index = find(current_mask(index_select));
+        if isempty(dmn_regions(k).vertices_index), dmn_zero_v = [dmn_zero_v;k]; end
         dmn_regions(k).vertices = brain_vertices_select(dmn_regions(k).vertices_index,:);
         dmn_regions(k).mask_subsetseed = true(length(dmn_regions(k).vertices_index),1);
         dmn_regions(k).type = "mask";
@@ -63,6 +66,7 @@ for iParcel =1:nParcelsDMNl
         dmn_regions(k).name = lhParcelsDMN{iParcel,1};
         current_mask = [zeros_r;lhParcelsDMN{iParcel,2}];
         dmn_regions(k).vertices_index = find(current_mask(index_select));
+        if isempty(dmn_regions(k).vertices_index), dmn_zero_v = [dmn_zero_v;k]; end
         dmn_regions(k).vertices = brain_vertices_select(dmn_regions(k).vertices_index,:);
         dmn_regions(k).mask_subsetseed = true(length(dmn_regions(k).vertices_index),1);
         dmn_regions(k).type = "mask";
@@ -75,6 +79,7 @@ for iParcel =1:nParcelsDANr
         dan_regions(l).name = rhParcelsDAN{iParcel,1};
         current_mask = [rhParcelsDAN{iParcel,2};zeros_l];
         dan_regions(l).vertices_index = find(current_mask(index_select));
+        if isempty(dan_regions(l).vertices_index), dan_zero_v = [dan_zero_v;l]; end
         dan_regions(l).vertices = brain_vertices_select(dan_regions(l).vertices_index,:);
         dan_regions(l).mask_subsetseed = true(length(dan_regions(l).vertices_index),1);
         dan_regions(l).type = "mask";
@@ -86,6 +91,7 @@ for iParcel =1:nParcelsDANl
         dan_regions(l).name = rhParcelsDAN{iParcel,1};
         current_mask = [zeros_r;rhParcelsDAN{iParcel,2}];
         dan_regions(l).vertices_index = find(current_mask(index_select));
+        if isempty(dan_regions(l).vertices_index), dan_zero_v = [dan_zero_v;l]; end
         dan_regions(l).vertices = brain_vertices_select(dan_regions(l).vertices_index,:);
         dan_regions(l).mask_subsetseed = true(length(dan_regions(l).vertices_index),1);      
         dan_regions(l).type = "mask";

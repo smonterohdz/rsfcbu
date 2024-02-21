@@ -1,7 +1,7 @@
 %%
 % test-retest reliability using individual imprpved seeds/submasks
 clear all;
-OVERWRITE_ = 1;
+OVERWRITE_ = 0;
 
 subjects_set = [1:7 9:16];
 nSubjs=length(subjects_set);
@@ -11,8 +11,7 @@ dmn_improv_hbo = cell(nSubjs,1);
 dan_improv_hbo = cell(nSubjs,1);
 dmn_improv_hbr = cell(nSubjs,1);
 dan_improv_hbr = cell(nSubjs,1);
-rDMNDAN_AllSubj_hbo = zeros(274,274,nSubjs);
-rDMNDAN_AllSubj_hbr = zeros(274,274,nSubjs);
+
 
 
 % flags and thresholds
@@ -30,11 +29,18 @@ flags.parcel_scheme = 'schaefer';
 
 [fwFolder,anatomFolder,derivFolder,dataDir] = setmyenv(flags);
 
-[dmn_mask,dan_mask,mesh_brain,idx_select] = Parcellation_test_FC(anatomFolder,fwFolder,flags);
+[dmn_mask,dan_mask,mesh_brain,idx_select,dmn_z,dan_z] = Parcellation_test_FC(anatomFolder,fwFolder,flags);
+dmn_mask(dmn_z) = [];
+dan_mask(dan_z) = [];
 nparcelsdmn = length(dmn_mask);
 nparcelsdan = length(dan_mask);
+
+dmn_mask(1).type = "seed";
 plot_net_mask(mesh_brain,idx_select,dmn_mask);
+dan_mask(1).type="seed";
 plot_net_mask(mesh_brain,idx_select,dan_mask);
+dmn_mask(1).type = dmn_mask(2).type;
+dan_mask(1).type = dan_mask(2).type;
 
 dmn_seeds_ts = cell(length(dmn_mask),2,nSubjs);
 dan_seeds_ts = cell(length(dan_mask),2,nSubjs);
@@ -51,9 +57,11 @@ if ~exist(pipelineDir,'dir')
     mkdir(pipelineDir);
 end
 
+rDMNDAN_AllSubj_hbo = zeros((nparcelsdan+nparcelsdmn)*2,(nparcelsdmn+nparcelsdan)*2,nSubjs);
+rDMNDAN_AllSubj_hbr = zeros((nparcelsdan+nparcelsdmn)*2,(nparcelsdmn+nparcelsdan)*2,nSubjs);
 %%
 if OVERWRITE_ || ~exist([pipelineDir,fOut_reliability,'.mat'],'file')
-    for iSubj = 14:nSubjs
+    for iSubj = 1:nSubjs
         subject = num2str(subjects_set(iSubj));
         fprintf('==============================\n');
         fprintf('Subject %s\n',subject);
@@ -202,11 +210,19 @@ end
 fooHbO = rDMNDAN_AllSubj_hbo(1:(nparcelsdmn+nparcelsdan),(nparcelsdmn+nparcelsdan+1):end,:);
 fooHbR = rDMNDAN_AllSubj_hbr(1:(nparcelsdmn+nparcelsdan),(nparcelsdmn+nparcelsdan+1):end,:);
 
+[f1,f2]= plot_corrMat_FC(rDMNDAN_AllSubj_hbo,rDMNDAN_AllSubj_hbr,subjects_set);
+saveas(f1,[pipelineDir,'HbO_Subjects_BigCorrMat.png']);
+saveas(f2,[pipelineDir,'HbR_Subjects_BigCorrMat.png']);
+close(f1);
+close(f2);
+
+
 [f1,f2]= plot_corrMat_FC(fooHbO,fooHbR,subjects_set);
 saveas(f1,[pipelineDir,'HbO_Subjects_CorrMat.png']);
 saveas(f2,[pipelineDir,'HbR_Subjects_CorrMat.png']);
 close(f1);
 close(f2);
+
 
 zHbO = 0.5 * log((1+fooHbO)./(1-fooHbO));
 zHbR = 0.5 * log((1+fooHbR)./(1-fooHbR));
