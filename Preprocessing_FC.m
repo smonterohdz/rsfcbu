@@ -25,7 +25,7 @@ mlActAuto = [];
 
 % Convert to dOD
 dod = hmrR_Intensity2OD( snirfObj.data );
-dodNP = dod;
+dodNP = dod.copy();
 if strcmp(flags.macorrect,'splineSG')
     % Find Motion Artifacts
     % tIncAuto = hmrR_MotionArtifact(data, probe, mlActMan, mlActAuto, tIncMan, tMotion, tMask, STDEVthresh, AMPthresh)

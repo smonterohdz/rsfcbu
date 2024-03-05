@@ -16,8 +16,8 @@ for kk = 1:size(non_seed,2)
     R_HbO(kk) = R(2);P_HbO(kk) = P(2);
 end
 
-%R_HbO_f = 0.5*log((1+R_HbO)./(1-R_HbO));
-R_HbO_f = R_HbO;
+R_HbO_f = 0.5*log((1+R_HbO)./(1-R_HbO));
+%R_HbO_f = R_HbO;
 hmap =[];
 % HbO
 
