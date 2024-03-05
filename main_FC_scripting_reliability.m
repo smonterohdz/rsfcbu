@@ -15,18 +15,17 @@ dan_improv_hbr = cell(nSubjs,1);
 
 
 % flags and thresholds
-flags.macorrect = 'spline'; % 'none' or 'spline'
+flags.macorrect = 'splineSG'; % 'none' or 'spline'
 flags.bpfilt = 'image';% 'none' 'channel' or 'image'
 flags.imagerecon = 'brain+scalp'; %'brain' or 'brain+scalp'
 flags.rhoSD_ssThresh = 15;
 flags.gsr = 'image';%'none','channel' or 'image'
 flags.r_thresh = 0.7; % .r_thresh is the threshold for the clustering
-flags.plot=0; % .plot  flag to plot the brain correlation map
+flags.plot = 0; % .plot  flag to plot the brain correlation map
 flags.p_thresh = 0; % . p_thresh is used to plot r values below that p-val (use 0 to plot all the correlations)
 flags.clusteringType = 1; %1:Matlab, 2:David's algorithm
 flags.task = 'RS';
-flags.parcel_scheme = 'schaefer';
-
+flags.parcel_scheme = 'schaefer_comb';
 [fwFolder,anatomFolder,derivFolder,dataDir] = setmyenv(flags);
 
 [dmn_mask,dan_mask,mesh_brain,idx_select,dmn_z,dan_z] = Parcellation_test_FC(anatomFolder,fwFolder,flags);

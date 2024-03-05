@@ -87,7 +87,7 @@ for i=1:5
     else
         %vmax = min(abs([min(A),max(A)]));
         vmax = max(A);
-        clim([-vmax, vmax]);
+        clim([-vmax*1.1, vmax]);
         if ~isempty(seed) && size(seed',2)==1
             myColorMap=[0,1,0;0,1,0;0,1,0;0,1,0;0,1,0;0,1,0;0,1,0;flipud(cbrewer('div','RdBu',256))];
         else
