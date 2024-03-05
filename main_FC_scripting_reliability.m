@@ -1,7 +1,7 @@
 %%
 % test-retest reliability using individual imprpved seeds/submasks
 clear all;
-OVERWRITE_ = 1;
+OVERWRITE_ = 0;
 
 subjects_set = [1:7 9:16];
 nSubjs=length(subjects_set);
@@ -21,11 +21,7 @@ flags.imagerecon = 'brain+scalp'; %'brain' or 'brain+scalp'
 flags.rhoSD_ssThresh = 15;
 flags.gsr = 'image';%'none','channel' or 'image'
 flags.r_thresh = 0.7; % .r_thresh is the threshold for the clustering
-<<<<<<< HEAD
-flags.plot=1; % .plot  flag to plot the brain correlation map
-=======
 flags.plot = 0; % .plot  flag to plot the brain correlation map
->>>>>>> f2705c757585401c97186abde190fe144d89b449
 flags.p_thresh = 0; % . p_thresh is used to plot r values below that p-val (use 0 to plot all the correlations)
 flags.clusteringType = 1; %1:Matlab, 2:David's algorithm
 flags.task = 'RS';
