@@ -10,16 +10,19 @@ rDMNDAN_AllSubj_hbr = zeros(40,40,length(subjects_set));
 nSubjs=length(subjects_set);
 
 % flags and thresholds.
-flags.macorrect = 'spline'; % 'none' or 'spline'
+flags.macorrect = 'splineSG'; % 'none' or 'spline'
 flags.bpfilt = 'image';% 'none' 'channel' or 'image'
 flags.imagerecon = 'brain+scalp'; %'brain' or 'brain+scalp'
 flags.rhoSD_ssThresh = 15;
 flags.gsr = 'image';%'none','channel' or 'image'
 flags.r_thresh = 0.7; % .r_thresh is the threshold for the clustering
-flags.plot=0; % .plot  flag to plot the brain correlation map
+flags.plot = 0; % .plot  flag to plot the brain correlation map
 flags.p_thresh = 0; % . p_thresh is used to plot r values below that p-val (use 0 to plot all the correlations)
-flags.clusteringType = 1; %1:Matlab, 2:David's algorithm
+flags.clusteringType = 1; %0: no clustering, 1:Matlab, 2:David's algorithm
 flags.task = 'WM';
+flags.parcel_scheme = 'schaefer_comb';
+flags.Adot_scaling_factor = 100;
+
 pipeline_str = sprintf('WM-macor-%s_bpfilt-%s_imrec-%s_gsr-%s_clust-%i',...
     flags.macorrect,flags.bpfilt,flags.imagerecon,flags.gsr,flags.clusteringType);
 fOut_map=sprintf('WM-Map_%s',pipeline_str);

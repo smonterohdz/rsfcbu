@@ -1,7 +1,7 @@
 %%
 % test-retest reliability using individual imprpved seeds/submasks
 clear all;
-OVERWRITE_ = 0;
+OVERWRITE_ = 1;
 
 subjects_set = [1:7 9:16];
 nSubjs=length(subjects_set);
@@ -12,8 +12,6 @@ dan_improv_hbo = cell(nSubjs,1);
 dmn_improv_hbr = cell(nSubjs,1);
 dan_improv_hbr = cell(nSubjs,1);
 
-
-
 % flags and thresholds
 flags.macorrect = 'splineSG'; % 'none' or 'spline'
 flags.bpfilt = 'image';% 'none' 'channel' or 'image'
@@ -23,9 +21,10 @@ flags.gsr = 'image';%'none','channel' or 'image'
 flags.r_thresh = 0.7; % .r_thresh is the threshold for the clustering
 flags.plot = 0; % .plot  flag to plot the brain correlation map
 flags.p_thresh = 0; % . p_thresh is used to plot r values below that p-val (use 0 to plot all the correlations)
-flags.clusteringType = 1; %1:Matlab, 2:David's algorithm
-flags.task = 'RS';
+flags.clusteringType = 1; %0: no clustering, 1:Matlab, 2:David's algorithm
+flags.task = 'WM';
 flags.parcel_scheme = 'schaefer_comb';
+flags.Adot_scaling_factor = 100;
 [fwFolder,anatomFolder,derivFolder,dataDir] = setmyenv(flags);
 
 [dmn_mask,dan_mask,mesh_brain,idx_select,dmn_z,dan_z] = Parcellation_test_FC(anatomFolder,fwFolder,flags);
@@ -35,9 +34,9 @@ nparcelsdmn = length(dmn_mask);
 nparcelsdan = length(dan_mask);
 
 dmn_mask(1).type = "seed";
-plot_net_mask(mesh_brain,idx_select,dmn_mask);
+f1=plot_net_mask(mesh_brain,idx_select,dmn_mask);
 dan_mask(1).type="seed";
-plot_net_mask(mesh_brain,idx_select,dan_mask);
+f2=plot_net_mask(mesh_brain,idx_select,dan_mask);
 dmn_mask(1).type = dmn_mask(2).type;
 dan_mask(1).type = dan_mask(2).type;
 
@@ -46,15 +45,19 @@ dan_seeds_ts = cell(length(dan_mask),2,nSubjs);
 dmn_seeds_NP_ts = cell(length(dmn_mask),2,nSubjs);
 dan_seeds_NP_ts = cell(length(dan_mask),2,nSubjs);
 
-pipeline_str = sprintf('%s-macor-%s_bpfilt-%s_imrec-%s_gsr-%s_clust-%i_parcel-%s',...
+pipeline_str = sprintf('%s-macor-%s_bpfilt-%s_imrec-%s_gsr-%s_clust-%i_parcel-%s_Asf-%i',...
     flags.task,flags.macorrect,flags.bpfilt,flags.imagerecon,flags.gsr, ...
-    flags.clusteringType,flags.parcel_scheme);
+    flags.clusteringType,flags.parcel_scheme,flags.Adot_scaling_factor);
 fOut_reliability=sprintf('reliability_%s',pipeline_str);
 fOut_pmap=sprintf('probMap_%s',pipeline_str);
 pipelineDir = sprintf('%sPipeline-%s/',derivFolder,pipeline_str);
 if ~exist(pipelineDir,'dir')
     mkdir(pipelineDir);
 end
+saveas(f1,[pipelineDir,'DMN_regions_3D.png']);
+close(f1);
+saveas(f2,[pipelineDir,'DAN_regions_3D.png']);
+close(f2);
 
 rDMNDAN_AllSubj_hbo = zeros((nparcelsdan+nparcelsdmn)*2,(nparcelsdmn+nparcelsdan)*2,nSubjs);
 rDMNDAN_AllSubj_hbr = zeros((nparcelsdan+nparcelsdmn)*2,(nparcelsdmn+nparcelsdan)*2,nSubjs);
@@ -123,25 +126,31 @@ if OVERWRITE_ || ~exist([pipelineDir,fOut_reliability,'.mat'],'file')
         [HbO_brain_r1r2] = [HbO_brain_chunkr1;HbO_brain_chunkr2];
         [HbR_brain_r1r2] = [HbR_brain_chunkr1;HbR_brain_chunkr2];
         %%
-        % [dmn_mask_hbo] = Clustering_FC(HbO_brain_r1r2,dmn_mask,flags);
-        % [dmn_mask_hbr] = Clustering_FC(HbR_brain_r1r2,dmn_mask,flags);
-        [dmn_improv_hbo{iSubj}] = dmn_mask;
-        [dmn_improv_hbr{iSubj}] = dmn_mask;
+        if flags.clusteringType > 0
+            [dmn_mask_hbo] = Clustering_FC(HbO_brain_r1r2,dmn_mask,flags);
+            [dmn_mask_hbr] = Clustering_FC(HbR_brain_r1r2,dmn_mask,flags);
+        else
+            [dmn_improv_hbo{iSubj}] = dmn_mask;
+            [dmn_improv_hbr{iSubj}] = dmn_mask;
+        end
 
         %%
-        % [dan_mask_hbo] = Clustering_FC(HbO_brain_r1r2,dan_mask,flags);
-        % [dan_mask_hbr] = Clustering_FC(HbR_brain_r1r2,dan_mask,flags);
-        [dan_improv_hbo{iSubj}] = dan_mask;
-        [dan_improv_hbr{iSubj}] = dan_mask;
-
+        if flags.clusteringType > 0
+            [dan_mask_hbo] = Clustering_FC(HbO_brain_r1r2,dan_mask,flags);
+            [dan_mask_hbr] = Clustering_FC(HbR_brain_r1r2,dan_mask,flags);
+        else
+            [dan_improv_hbo{iSubj}] = dan_mask;
+            [dan_improv_hbr{iSubj}] = dan_mask;
+        end
         %%
-        % [~,dmn_improv_hbo{iSubj},dan_improv_hbo{iSubj},~] = ClusterSelection_FC(dmn_mask_hbo,dan_mask_hbo,HbO_brain_r1r2,flags);
-        % [~,dmn_improv_hbr{iSubj},dan_improv_hbr{iSubj},~] = ClusterSelection_FC(dmn_mask_hbr,dan_mask_hbr,HbR_brain_r1r2,flags);
-        
+        if flags.clusteringType > 0
+            [~,dmn_improv_hbo{iSubj},dan_improv_hbo{iSubj},~] = ClusterSelection_FC(dmn_mask_hbo,dan_mask_hbo,HbO_brain_r1r2,flags);
+            [~,dmn_improv_hbr{iSubj},dan_improv_hbr{iSubj},~] = ClusterSelection_FC(dmn_mask_hbr,dan_mask_hbr,HbR_brain_r1r2,flags);
+        end        
 
         %%
         % HbO
-        fprintf('(hbo)DMN submask:');
+        fprintf('\n(hbo)DMN submask:');
         BrainMaps_hbo = zeros(length(idx_select),2*(length(dmn_improv_hbo{iSubj})+length(dan_improv_hbo{iSubj})));
         for iSubmask=1:length(dmn_improv_hbo{iSubj})
             [~,hmap1,A_select1] = CorrelationBrainMap_FC(dmn_improv_hbo{iSubj}(iSubmask),mesh_brain,idx_select,HbO_brain_chunkr1,flags.p_thresh,flags.plot);
@@ -226,20 +235,41 @@ close(f2);
 zHbO = 0.5 * log((1+fooHbO)./(1-fooHbO));
 zHbR = 0.5 * log((1+fooHbR)./(1-fooHbR));
 
-f=figure();
+f=figure(); 
+fsize = 7;
 colormap(jet(64))
 
 subplot(2,3,1)
 imagesc( mean(fooHbO,3), [-1 1] );
-ylabel({'HbO';'Submasks Run1'});
+ax= gca();
+ax.TickLabelInterpreter='none';
+ax.XAxis.FontSize = fsize;
+ax.YAxis.FontSize = fsize;
+ylabel({'HbO';'Regions Run1'});
+yticks(1:nparcelsdmn+nparcelsdan);
+yticklabels(replace([{dmn_mask.name},{dan_mask.name}], ...
+    {'7Networks_','Default','DorsAttn'},{'','DMN','DAN'}));
+xticklabels({});
 title('mean R')
 colorbar
 
 subplot(2,3,4)
 imagesc( mean(fooHbR,3), [-1 1] );
-ylabel({'HbR';'Submasks Run1'});
+ax= gca();
+ax.XAxis.FontSize = fsize;
+ax.YAxis.FontSize = fsize;
+ax.TickLabelInterpreter='none';
+ylabel({'HbO';'Regions Run1'});
+yticks(1:nparcelsdmn+nparcelsdan);
+yticklabels(replace([{dmn_mask.name},{dan_mask.name}], ...
+    {'7Networks_','Default','DorsAttn'},{'','DMN','DAN'}));
+xticks(1:nparcelsdmn+nparcelsdan);
+xticklabels(replace([{dmn_mask.name},{dan_mask.name}], ...
+    {'7Networks_','Default','DorsAttn'},{'','DMN','DAN'}));
+xtickangle(45);
+ylabel({'HbR';'Regions Run1'});
 colorbar
-xlabel({'Submasks Run2'});
+xlabel({'Regions Run2'});
 
 
 
@@ -247,14 +277,28 @@ subplot(2,3,2)
 foo = mean(zHbO,3);
 %lst = find(eye(size(foo))==1); foo(lst) = 0; % remove diagonal
 imagesc( foo, [-1 1]*max(abs(foo(:))) )
+ax = gca();
+ax.XAxis.FontSize = fsize;
+ax.YAxis.FontSize = fsize;
 title('mean Z')
+xticklabels({});
+yticklabels({});
 colorbar
 
 subplot(2,3,5)
 foo = mean(zHbR,3);
 %lst = find(eye(size(foo))==1); foo(lst) = 0; % remove diagonal
 imagesc( foo, [-1 1]*max(abs(foo(:))) )
-xlabel({'Submasks Run2'});
+ax= gca();
+ax.XAxis.FontSize = fsize;
+ax.YAxis.FontSize = fsize;
+ax.TickLabelInterpreter='none';
+xlabel({'Regions Run2'});
+xticks(1:nparcelsdmn+nparcelsdan);
+xticklabels(replace([{dmn_mask.name},{dan_mask.name}], ...
+    {'7Networks_','Default','DorsAttn'},{'','DMN','DAN'}));
+xtickangle(45);
+yticklabels({});
 colorbar
 
 
@@ -268,7 +312,12 @@ foo = -log10(2*(1-tcdf(abs(fooM./fooSE),nSubjs-1)));
 foo = foo .* (foo>2) .* fooSign;
 %lst = find(eye(size(foo))==1); foo(lst) = 0; % remove diagonal
 imagesc( foo, [-1 1]*max(abs(foo(:))) )
+ax = gca();
+ax.XAxis.FontSize = fsize;
+ax.YAxis.FontSize = fsize;
 title('-log10( p_{val}(Z T-Statistic) )')
+xticklabels({});
+yticklabels({});
 colorbar
 
 subplot(2,3,6)
@@ -280,10 +329,19 @@ foo = -log10(2*(1-tcdf(abs(fooM./fooSE),nSubjs-1)));
 foo = foo .* (foo>2) .* fooSign;
 %lst = find(eye(size(foo))==1); foo(lst) = 0; % remove diagonal
 imagesc( foo, [-1 1]*max(abs(foo(:))) )
+ax= gca();
+ax.XAxis.FontSize = fsize;
+ax.YAxis.FontSize = fsize;
+ax.TickLabelInterpreter='none';
 colorbar
-xlabel({'Submasks Run2'});
+xlabel({'Regions Run2'});
+xticks(1:nparcelsdmn+nparcelsdan);
+xticklabels(replace([{dmn_mask.name},{dan_mask.name}], ...
+    {'7Networks_','Default','DorsAttn'},{'','DMN','DAN'}));
+xtickangle(45);
+yticklabels({});
 
-f.Position = [10         10        1049         507];
+f.Position = [10         10        980         507];
 saveas(f,[pipelineDir,fOut_reliability,'.png']);
 close(f);
 

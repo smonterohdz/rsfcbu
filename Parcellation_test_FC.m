@@ -2,9 +2,9 @@ function [dmn_regions,dan_regions,mesh_brain,idx_select,dmn_zero_v,dan_zero_v] =
 %UNTITLED3 Summary of this function goes here
 %   Detailed explanation goes here
 
-
 % Load Brain Adot
 load([fwFolder 'Adot.mat'],'Adot');%
+Adot = Adot./flags.Adot_scaling_factor;
 index_select = log10(sum(Adot(:,:,1),1))>=-2;
 idx_select = find(index_select);
 
@@ -16,12 +16,12 @@ A = log10(sum(Adot_new(:,:,1),1));
 % Load brain mesh
 load([fwFolder, 'mesh_brain.mat'],'mesh_brain');
 % figure;
-% plot_sensitivity(mesh_brain,A, [-2 2])
+% plot_sensitivity(mesh_brain,A, [-2 0])
 
 
 
 %% reading schaefer parcels from mat file
-load([fwFolder,'schaeferParcels.mat'],'rhParcelsDMN','lhParcelsDMN','rhParcelsDAN','lhParcelsDAN');
+load([fwFolder,'schaeferParcels_dan_reduced.mat'],'rhParcelsDMN','lhParcelsDMN','rhParcelsDAN','lhParcelsDAN');
 nParcelsDMNr = size(rhParcelsDMN,1);
 nParcelsDMNl = size(lhParcelsDMN,1);
 nParcelsDANr = size(rhParcelsDAN,1);
@@ -88,8 +88,8 @@ if strcmp(flags.parcel_scheme,'schaefer')
     end
 
     for iParcel =1:nParcelsDANl
-        dan_regions(l).name = rhParcelsDAN{iParcel,1};
-        current_mask = [zeros_r;rhParcelsDAN{iParcel,2}];
+        dan_regions(l).name = lhParcelsDAN{iParcel,1};
+        current_mask = [zeros_r;lhParcelsDAN{iParcel,2}];
         dan_regions(l).vertices_index = find(current_mask(index_select));
         if isempty(dan_regions(l).vertices_index), dan_zero_v = [dan_zero_v;l]; end
         dan_regions(l).vertices = brain_vertices_select(dan_regions(l).vertices_index,:);

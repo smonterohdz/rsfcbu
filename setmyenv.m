@@ -8,7 +8,8 @@ if isunix()
         mypwd=pwd;cd('../atlasviewer_repo/');setpaths;cd(mypwd);
     end
     if isempty(which('Homer3'))
-        mypwd=pwd;cd('../homer3_repo/');setpaths;cd(mypwd);
+        %mypwd=pwd;cd('../homer3_repo/');setpaths;cd(mypwd);
+        mypwd=pwd;cd('../Homer3_smh_repo/');setpaths;cd(mypwd);
     end
     if contains(flags.parcel_scheme,'aal')
         fwFolder = '/projectnb/nphfnirs/s/DATA_BU/2022/Rest_Movie_WorkingMemory/DataRSFC_Analysis/fw/';

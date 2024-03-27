@@ -5,6 +5,7 @@ function [HbO_brain,HbR_brain] = ImageReconstruction_FC(snirfObj,dodObj,dcObj,fw
 
 % Load Brain Adot
 load([fwFolder 'Adot.mat'],'Adot');%
+Adot = Adot./flags.Adot_scaling_factor;
 index_select = log10(sum(Adot(:,:,1),1))>=-2;
 n_vox = sum(index_select);
 Adot_select = Adot(:,index_select,:);
@@ -13,6 +14,7 @@ Adot = Adot_select;
 
 % Load Scalp Adot
 load([fwFolder 'Adot_scalp.mat'],'Adot_scalp');%
+Adot_scalp = Adot_scalp./flags.Adot_scaling_factor;
 index_select_scalp = log10(sum(Adot_scalp(:,:,1),1))>=-2;
 Adot_select = Adot_scalp(:,index_select_scalp,:);
 Adot_scalp = Adot_select;
