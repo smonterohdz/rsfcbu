@@ -28,14 +28,14 @@ dan_mask(dan_z) = [];
 nparcelsdmn = length(dmn_mask);
 nparcelsdan = length(dan_mask);
 
-dmn_mask(1).type = "seed";
-f1=plot_net_mask(mesh_brain,idx_select,dmn_mask);
-dan_mask(1).type="seed";
-f2=plot_net_mask(mesh_brain,idx_select,dan_mask);
-dmn_mask(1).type = dmn_mask(2).type;
-dan_mask(1).type = dan_mask(2).type;
+%dmn_mask(1).type = "seed";
+%f1=plot_net_mask(mesh_brain,idx_select,dmn_mask);
+%dan_mask(1).type="seed";
+%f2=plot_net_mask(mesh_brain,idx_select,dan_mask);
+%dmn_mask(1).type = dmn_mask(2).type;
+%dan_mask(1).type = dan_mask(2).type;
 
-iSubj = 1;
+iSubj = 3;
 subject = num2str(subjects_set(iSubj));
 % use twindow.init_sec = -1 if you want to use the onset and duration
 % defined in the snirf file (assuming there is only one stimulus).
@@ -55,10 +55,10 @@ pipelineDir = sprintf('%sPipeline-%s/',derivFolder,pipeline_str);
 if ~exist(pipelineDir,'dir')
     mkdir(pipelineDir);
 end
-saveas(f1,[pipelineDir,'DMN_regions_3D.png']);
-close(f1);
-saveas(f2,[pipelineDir,'DAN_regions_3D.png']);
-close(f2);
+% saveas(f1,[pipelineDir,'DMN_regions_3D.png']);
+% close(f1);
+% saveas(f2,[pipelineDir,'DAN_regions_3D.png']);
+% close(f2);
 
 %%
 fprintf('Subject %s------------------------\n',subject);
@@ -217,16 +217,30 @@ else
         'dmn_hbo_ts','dmn_hbr_ts','dan_hbo_ts','dan_hbr_ts','iSubj','twindow','stim_labels',...
         'dmn_improv_hbo','dan_improv_hbo','dmn_improv_hbr','dan_improv_hbr');
 end
-
+r_hbo = zeros(nparcelsdmn+nparcelsdan,nparcelsdmn+nparcelsdan,nStim);
+r_hbr = zeros(nparcelsdmn+nparcelsdan,nparcelsdmn+nparcelsdan,nStim);
 for iStim=1:nStim
+    % Correlaition matrix R
     fsize = 12;
     fpos =   [458.6000   66.6000  827.2000  686.4000];
     f=figure;
     f.Position = fpos;
-    imagesc(corrcoef(BrainMaps_hbo(:,:,iStim)),[-1,1]);
+%    subplot(1,2,1);
+    %imagesc(corrcoef(BrainMaps_hbo(:,:,iStim)),[-1,1]);
+    [r_hbo(:,:,iStim),p0_hbo] = corrcoef(BrainMaps_hbo(:,:,iStim));
+    z_hbo = 0.5 * log((1+r_hbo(:,:,iStim))./(1-r_hbo(:,:,iStim)));
+    z_hbo(z_hbo>6) = 6; z_hbo(z_hbo<-6) = -6;
+    n = length(idx_select);
+    se_hbo = 1/(sqrt(n-3));
+    zscore_hbo = z_hbo ./ se_hbo;
+    pval_hbo= 2*(1-normcdf(abs(zscore_hbo)));
+    pval_hbolog10 = -log10(pval_hbo);
+    pval_hbolog10 = pval_hbolog10.*(pval_hbolog10>2).*sign(zscore_hbo);
+    imagesc(z_hbo,[-1 1].*max(abs(z_hbo).*(~eye(nparcelsdmn+nparcelsdan)),[],'all','omitnan'));
     colormap("jet");
     colorbar();
-    title({sprintf('Subject %s DMN-DAN HbO Run 1-8',subject),stim_labels{iStim},pipeline_str},'Interpreter','none');
+    %title({sprintf('Subject %s DMN-DAN HbO Run 1-8',subject),stim_labels{iStim},pipeline_str},'Interpreter','none');
+    title({sprintf('Subject %s DMN-DAN HbO Run 1-8',subject),stim_labels{iStim},'Fisher z and p-values'});
     yticks(1:nparcelsdmn+nparcelsdan);
     yticklabels(replace([{dmn_mask.name},{dan_mask.name}], ...
         {'7Networks_','Default','DorsAttn'},{'','DMN','DAN'}));
@@ -238,8 +252,44 @@ for iStim=1:nStim
     ax.XAxis.FontSize = fsize;
     ax.YAxis.FontSize = fsize;
     ax.TickLabelInterpreter='none';
+    for iX=1:(nparcelsdan+nparcelsdmn)
+        for iY=1:(nparcelsdan+nparcelsdmn)
+            %text(iX,iY,num2str(pval_hbo(iY,iX)));
+            if pval_hbo(iY,iX)<0.01
+                text(iX,iY,'*');
+            else
+                text(iX,iY,sprintf('%.2f',pval_hbo(iY,iX)),'HorizontalAlignment','center');
+            end
+        end
+    end
     saveas(f,[pipelineDir,fOut_dmndan_mat,'_Subj-',num2str(iSubj),'_WMseed_',stim_labels{iStim},'_hbo.png']);
     close(f);
+
+    % Pvalues of previous correl matrix
+    % subplot(1,2,2);
+    % n = length(idx_select);
+    % se_hbo = 1/(sqrt(n-3));
+    % zscore_hbo = z_hbo ./ se_hbo;
+    % pval_hbo= 2*(1-normcdf(abs(zscore_hbo)));
+    % pval_hbolog10 = -log10(pval_hbo);
+    % pval_hbolog10 = pval_hbolog10.*(pval_hbolog10>2).*sign(zscore_hbo);
+    % imagesc(pval_hbo,[-1 1]*max(abs(pval_hbo(:))));
+    % colormap("jet");
+    % cb=colorbar();
+    % title({'-log10(pval(Fisher-Z))'},'Interpreter','none');
+    % % yticks(1:nparcelsdmn+nparcelsdan);
+    % % yticklabels(replace([{dmn_mask.name},{dan_mask.name}], ...
+    % %     {'7Networks_','Default','DorsAttn'},{'','DMN','DAN'}));
+    % xticks(1:nparcelsdmn+nparcelsdan);
+    % xticklabels(replace([{dmn_mask.name},{dan_mask.name}], ...
+    %     {'7Networks_','Default','DorsAttn'},{'','DMN','DAN'}));
+    % xtickangle(45);
+    % ax= gca();
+    % ax.XAxis.FontSize = fsize;
+    % ax.YAxis.FontSize = fsize;
+    % ax.TickLabelInterpreter='none'; 
+    % saveas(f,[pipelineDir,fOut_dmndan_mat,'_Subj-',num2str(iSubj),'_WMseed_',stim_labels{iStim},'_hbo.png']);
+    % close(f);
 
     f=figure;
     plot(mean(dmn_hbo_ts{iStim},2),'-','Color',[0 0 1],'LineWidth',2.5);
@@ -259,10 +309,20 @@ for iStim=1:nStim
 
     f=figure;
     f.Position = fpos;
-    imagesc(corrcoef(BrainMaps_hbr(:,:,iStim)),[-1,1]);
+    [r_hbr(:,:,iStim),p0_hbr] = corrcoef(BrainMaps_hbr(:,:,iStim));
+    z_hbr = 0.5 * log((1+r_hbr(:,:,iStim))./(1-r_hbr(:,:,iStim)));
+    z_hbr(z_hbr>6) = 6; z_hbr(z_hbr<-6) = -6;
+    %n = length(idx_select);
+    se_hbr = 1/(sqrt(n-3));
+    zscore_hbr = z_hbr ./ se_hbr;
+    pval_hbr= 2*(1-normcdf(abs(zscore_hbr)));
+    pval_hbrlog10 = -log10(pval_hbr);
+    pval_hbrlog10 = pval_hbrlog10.*(pval_hbrlog10>2).*sign(zscore_hbr);
+    imagesc(z_hbr,[-1 1].*max(abs(z_hbr).*(~eye(nparcelsdmn+nparcelsdan)),[],'all','omitnan'));
     colormap("jet");
     colorbar();
-    title({sprintf('Subject %s DMN-DAN HbR Run 1-8',subject),stim_labels{iStim},pipeline_str},'Interpreter','none');
+    %title({sprintf('Subject %s DMN-DAN HbR Run 1-8',subject),stim_labels{iStim},pipeline_str},'Interpreter','none');
+    title({sprintf('Subject %s DMN-DAN HbR Run 1-8',subject),stim_labels{iStim},'Fisher z and p-values'});
     yticks(1:nparcelsdmn+nparcelsdan);
     yticklabels(replace([{dmn_mask.name},{dan_mask.name}], ...
         {'7Networks_','Default','DorsAttn'},{'','DMN','DAN'}));
@@ -274,6 +334,16 @@ for iStim=1:nStim
     ax.XAxis.FontSize = fsize;
     ax.YAxis.FontSize = fsize;
     ax.TickLabelInterpreter='none';
+    for iX=1:(nparcelsdan+nparcelsdmn)
+        for iY=1:(nparcelsdan+nparcelsdmn)
+            %text(iX,iY,num2str(pval_hbo(iY,iX)));
+            if pval_hbo(iY,iX)<0.01
+                text(iX,iY,'*');
+            else
+                text(iX,iY,sprintf('%.2f',pval_hbo(iY,iX)),'HorizontalAlignment','center');
+            end
+        end
+    end
     saveas(f,[pipelineDir,fOut_dmndan_mat,'_Subj-',num2str(iSubj),'_WMseed_',stim_labels{iStim},'_hbr.png']);
     close(f);
 
@@ -290,3 +360,109 @@ for iStim=1:nStim
     saveas(f,[pipelineDir,fOut_dmndan_mat,'_Subj-',num2str(iSubj),'_WMseed_',stim_labels{iStim},'_hbr_ts.png']);
     close(f);
 end
+
+[r_hbo_ActPas,~] = corrcoef([BrainMaps_hbo(:,:,1),BrainMaps_hbo(:,:,2)]);
+[r_hbr_ActPas,~] = corrcoef([BrainMaps_hbr(:,:,1),BrainMaps_hbr(:,:,2)]);
+
+save([pipelineDir,fOut_dmndan_mat,'.mat'],'BrainMaps_hbo','BrainMaps_hbr','flags','nStim',...
+    'dmn_hbo_ts','dmn_hbr_ts','dan_hbo_ts','dan_hbr_ts','iSubj','twindow','stim_labels',...
+    'dmn_improv_hbo','dan_improv_hbo','dmn_improv_hbr','dan_improv_hbr',...
+    'r_hbo','r_hbr','r_hbo_ActPas','r_hbr_ActPas');
+save([pipelineDir,'output.mat'],'BrainMaps_hbo','BrainMaps_hbr','flags','nStim',...
+    'dmn_hbo_ts','dmn_hbr_ts','dan_hbo_ts','dan_hbr_ts','iSubj','twindow','stim_labels',...
+    'dmn_improv_hbo','dan_improv_hbo','dmn_improv_hbr','dan_improv_hbr',...
+    'r_hbo','r_hbr','r_hbo_ActPas','r_hbr_ActPas');
+%% after runing Rscript
+fsize=11;
+load([pipelineDir,'R_output.mat']);
+f=figure();
+subplot(1,4,1);
+%imagesc(r_hbo(:,:,iStim));
+z_hbo = 0.5 * log((1+r_hbo(:,:,1))./(1-r_hbo(:,:,1)));
+z_hbo(z_hbo>6) = 6; z_hbo(z_hbo<-6) = -6;
+imagesc(tril(z_hbo,-1),[-1 1].*max(abs(z_hbo).*(~eye(nparcelsdmn+nparcelsdan)),[],'all','omitnan'));
+colormap("jet");
+cb=colorbar();
+cb.Label.String = 'Fisher Z val';
+title('Passive');
+yticks(1:nparcelsdmn+nparcelsdan);
+yticklabels(replace([{dmn_mask.name},{dan_mask.name}], ...
+    {'7Networks_','Default','DorsAttn'},{'','DMN','DAN'}));
+xticks(1:nparcelsdmn+nparcelsdan);
+xticklabels(replace([{dmn_mask.name},{dan_mask.name}], ...
+    {'7Networks_','Default','DorsAttn'},{'','DMN','DAN'}));
+xtickangle(45);
+ylabel(['Subject ',subject]);
+ax= gca();
+ax.XAxis.FontSize = fsize;
+ax.YAxis.FontSize = fsize;
+ax.TickLabelInterpreter='none';
+axis image;
+
+
+
+subplot(1,4,2);
+%imagesc(r_hbo(:,:,iStim));
+z_hbo = 0.5 * log((1+r_hbo(:,:,2))./(1-r_hbo(:,:,2)));
+z_hbo(z_hbo>6) = 6; z_hbo(z_hbo<-6) = -6;
+imagesc(tril(z_hbo,-1),[-1 1].*max(abs(z_hbo).*(~eye(nparcelsdmn+nparcelsdan)),[],'all','omitnan'));
+colormap("jet");
+cb=colorbar();
+cb.Label.String = 'Fisher Z val';
+title('Active')
+% yticks(1:nparcelsdmn+nparcelsdan);
+% yticklabels(replace([{dmn_mask.name},{dan_mask.name}], ...
+%     {'7Networks_','Default','DorsAttn'},{'','DMN','DAN'}));
+xticks(1:nparcelsdmn+nparcelsdan);
+xticklabels(replace([{dmn_mask.name},{dan_mask.name}], ...
+    {'7Networks_','Default','DorsAttn'},{'','DMN','DAN'}));
+xtickangle(45);
+ax= gca();
+ax.XAxis.FontSize = fsize;
+ax.YAxis.FontSize = fsize;
+ax.TickLabelInterpreter='none';
+axis image;
+
+subplot(1,4,3);
+imagesc(z_mat(1:10,1:10));
+colormap('jet');
+clim([-max(z_mat(1:10,1:10),[],'all'),max(z_mat(1:10,1:10),[],'all')]);
+cb=colorbar();
+cb.Label.String = 'Fisher Z val';
+title('Passive-Active');
+% yticks(1:nparcelsdmn+nparcelsdan);
+% yticklabels(replace([{dmn_mask.name},{dan_mask.name}], ...
+%     {'7Networks_','Default','DorsAttn'},{'','DMN','DAN'}));
+xticks(1:nparcelsdmn+nparcelsdan);
+xticklabels(replace([{dmn_mask.name},{dan_mask.name}], ...
+    {'7Networks_','Default','DorsAttn'},{'','DMN','DAN'}));
+xtickangle(45);
+ax= gca();
+ax.XAxis.FontSize = fsize;
+ax.YAxis.FontSize = fsize;
+ax.TickLabelInterpreter='none';
+axis image;
+
+
+sp=subplot(1,4,4);
+imagesc(-log10(p_mat(1:10,1:10)));
+colormap(sp,'hot');
+clim([0,2]);
+cb=colorbar();
+cb.Label.String = '-log_{10}(p-val)';
+title('Passive-Active');
+f.Position = [5    290    15392    373];
+% yticks(1:nparcelsdmn+nparcelsdan);
+% yticklabels(replace([{dmn_mask.name},{dan_mask.name}], ...
+%     {'7Networks_','Default','DorsAttn'},{'','DMN','DAN'}));
+xticks(1:nparcelsdmn+nparcelsdan);
+xticklabels(replace([{dmn_mask.name},{dan_mask.name}], ...
+    {'7Networks_','Default','DorsAttn'},{'','DMN','DAN'}));
+xtickangle(45);
+ax= gca();
+ax.XAxis.FontSize = fsize;
+ax.YAxis.FontSize = fsize;
+ax.TickLabelInterpreter='none';
+axis image;
+saveas(f,[pipelineDir,'Subj-',subject,'Passive-Active_hbo.png']);
+close(f);
