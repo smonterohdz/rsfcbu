@@ -21,7 +21,7 @@ if regions(1).type == "seed"
     b = 90;
     if length(regions)==1
         if isfield(regions(1),'mask_subsetseed') && ~isempty(regions(1).mask_subsetseed)
-            A_select(regions(1).vertices_index(regions(1).mask_subsetseed)) = b;
+            A_select(regions(1).vertices_index(regions(1).mask_subsetseed)) = a.*regions.groups;
         else
             A_select(regions(1).vertices_index) = b;
         end
