@@ -1,6 +1,6 @@
 %%
 clear all;
-OVERWRITE_ = 0;
+OVERWRITE_ = 1;
 
 %[fwFolder,anatomFolder,derivFolder,dataDir] = setmyenv();
 
@@ -360,10 +360,13 @@ for iStim=1:nStim
     saveas(f,[pipelineDir,fOut_dmndan_mat,'_Subj-',num2str(iSubj),'_WMseed_',stim_labels{iStim},'_hbr_ts.png']);
     close(f);
 end
-
-[r_hbo_ActPas,~] = corrcoef([BrainMaps_hbo(:,:,1),BrainMaps_hbo(:,:,2)]);
-[r_hbr_ActPas,~] = corrcoef([BrainMaps_hbr(:,:,1),BrainMaps_hbr(:,:,2)]);
-
+if strcmp(stim_labels{1},'Passive')
+    [r_hbo_ActPas,~] = corrcoef([BrainMaps_hbo(:,:,1),BrainMaps_hbo(:,:,2)]);
+    [r_hbr_ActPas,~] = corrcoef([BrainMaps_hbr(:,:,1),BrainMaps_hbr(:,:,2)]);
+else
+    [r_hbo_ActPas,~] = corrcoef([BrainMaps_hbo(:,:,2),BrainMaps_hbo(:,:,1)]);
+    [r_hbr_ActPas,~] = corrcoef([BrainMaps_hbr(:,:,2),BrainMaps_hbr(:,:,1)]);
+end
 save([pipelineDir,fOut_dmndan_mat,'.mat'],'BrainMaps_hbo','BrainMaps_hbr','flags','nStim',...
     'dmn_hbo_ts','dmn_hbr_ts','dan_hbo_ts','dan_hbr_ts','iSubj','twindow','stim_labels',...
     'dmn_improv_hbo','dan_improv_hbo','dmn_improv_hbr','dan_improv_hbr',...
@@ -376,15 +379,16 @@ save([pipelineDir,'output.mat'],'BrainMaps_hbo','BrainMaps_hbr','flags','nStim',
 fsize=11;
 load([pipelineDir,'R_output.mat']);
 f=figure();
+idx_p=find(strcmp(stim_labels,'Passive'));
 subplot(1,4,1);
 %imagesc(r_hbo(:,:,iStim));
-z_hbo = 0.5 * log((1+r_hbo(:,:,1))./(1-r_hbo(:,:,1)));
+z_hbo = 0.5 * log((1+r_hbo(:,:,idx_p))./(1-r_hbo(:,:,idx_p)));
 z_hbo(z_hbo>6) = 6; z_hbo(z_hbo<-6) = -6;
 imagesc(tril(z_hbo,-1),[-1 1].*max(abs(z_hbo).*(~eye(nparcelsdmn+nparcelsdan)),[],'all','omitnan'));
 colormap("jet");
 cb=colorbar();
 cb.Label.String = 'Fisher Z val';
-title('Passive');
+title(stim_labels{idx_p});
 yticks(1:nparcelsdmn+nparcelsdan);
 yticklabels(replace([{dmn_mask.name},{dan_mask.name}], ...
     {'7Networks_','Default','DorsAttn'},{'','DMN','DAN'}));
@@ -400,16 +404,16 @@ ax.TickLabelInterpreter='none';
 axis image;
 
 
-
+idx_a=find(strcmp(stim_labels,'Active'));
 subplot(1,4,2);
 %imagesc(r_hbo(:,:,iStim));
-z_hbo = 0.5 * log((1+r_hbo(:,:,2))./(1-r_hbo(:,:,2)));
+z_hbo = 0.5 * log((1+r_hbo(:,:,idx_a))./(1-r_hbo(:,:,idx_a)));
 z_hbo(z_hbo>6) = 6; z_hbo(z_hbo<-6) = -6;
 imagesc(tril(z_hbo,-1),[-1 1].*max(abs(z_hbo).*(~eye(nparcelsdmn+nparcelsdan)),[],'all','omitnan'));
 colormap("jet");
 cb=colorbar();
 cb.Label.String = 'Fisher Z val';
-title('Active')
+title(stim_labels{idx_a})
 % yticks(1:nparcelsdmn+nparcelsdan);
 % yticklabels(replace([{dmn_mask.name},{dan_mask.name}], ...
 %     {'7Networks_','Default','DorsAttn'},{'','DMN','DAN'}));
