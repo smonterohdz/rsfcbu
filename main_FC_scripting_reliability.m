@@ -160,8 +160,8 @@ if OVERWRITE_ || ~exist([pipelineDir,fOut_reliability,'.mat'],'file')
         for iSubmask=1:length(dmn_improv_hbo{iSubj})
             [~,hmap1,A_select1] = CorrelationBrainMap_FC(dmn_improv_hbo{iSubj}(iSubmask),mesh_brain,idx_select,HbO_brain_chunkr1,flags.p_thresh,flags.plot);
             [~,hmap2,A_select2] = CorrelationBrainMap_FC(dmn_improv_hbo{iSubj}(iSubmask),mesh_brain,idx_select,HbO_brain_chunkr2,flags.p_thresh,flags.plot);
-            BrainMaps_hbo(:,iSubmask) = A_select1;
-            BrainMaps_hbo(:,length(dmn_improv_hbo{iSubj})+length(dan_improv_hbo{iSubj})+iSubmask) = A_select2;
+            BrainMaps_hbo(:,iSubmask,iSubj) = A_select1;
+            BrainMaps_hbo(:,length(dmn_improv_hbo{iSubj})+length(dan_improv_hbo{iSubj})+iSubmask,iSubj) = A_select2;
             %dmn_seeds_NP_ts{iSubmask,1,iSubj} = mean(HbO_r1r2NP(:,dmn_improv_hbo{iSubj}(iSubmask).vertices_index(dmn_improv_hbo{iSubj}(iSubmask).mask_subsetseed)),2);
             dmn_seeds_ts{iSubmask,1,iSubj} = mean(HbO_brain_r1r2(:,dmn_improv_hbo{iSubj}(iSubmask).vertices_index(dmn_improv_hbo{iSubj}(iSubmask).mask_subsetseed)),2);
             fprintf('%i\t',iSubmask);
@@ -210,19 +210,19 @@ if OVERWRITE_ || ~exist([pipelineDir,fOut_reliability,'.mat'],'file')
         %figure(10), imagesc(r,[-1 1]); colormap("jet")
         rDMNDAN_AllSubj_hbr(:,:,iSubj) = r;
     end
-    A_select_mean = mean(BrainMaps_hbo,3);
+    A_select_mean = mean(BrainMaps_hbo(:,15,:),3);
     A = zeros(1,size(mesh_brain.vertices,1));
     A(idx_select) = A_select_mean;
-    hmap = plot_connectivity_seedregion(mesh_brain,A,[],idx_select(dmn_mask.vertices_index), ...
+    hmap = plot_connectivity_seedregion(mesh_brain,A,[],idx_select(dmn_mask(5).vertices_index), ...
         [],[],[],[]);
     hold on;
     save([pipelineDir,fOut_reliability,'.mat'],'rDMNDAN_AllSubj_hbo','rDMNDAN_AllSubj_hbr','flags',...
         'dmn_seeds_NP_ts','dan_seeds_NP_ts','dmn_seeds_ts','dan_seeds_ts',...
-        'dmn_improv_hbo','dan_improv_hbo','dmn_improv_hbr','dan_improv_hbr');
+        'dmn_improv_hbo','dan_improv_hbo','dmn_improv_hbr','dan_improv_hbr','BrainMaps_hbo');
 else
     load([pipelineDir,fOut_reliability,'.mat'],'rDMNDAN_AllSubj_hbo','rDMNDAN_AllSubj_hbr','flags', ...
         'dmn_seeds_NP_ts','dan_seeds_NP_ts','dmn_seeds_ts','dan_seeds_ts',...
-        'dmn_improv_hbo','dan_improv_hbo','dmn_improv_hbr','dan_improv_hbr');
+        'dmn_improv_hbo','dan_improv_hbo','dmn_improv_hbr','dan_improv_hbr','BrainMaps_hbo');
 end
 %%
 %test-retest group
