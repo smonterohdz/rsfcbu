@@ -1,7 +1,8 @@
-function [dmn_regions,dan_regions,mesh_brain,idx_select] = Parcellation_FC(anatomFolder,fwFolder,flags)
+function [dmn_regions,dan_regions,mesh_brain,idx_select,dmn_zero_v,dan_zero_v] = Parcellation_FC(anatomFolder,fwFolder,flags)
 %UNTITLED3 Summary of this function goes here
 %   Detailed explanation goes here
-
+dmn_zero_v = [];
+dan_zero_v = [];
 
 % Load Brain Adot
 load([fwFolder 'Adot.mat'],'Adot');%
@@ -80,6 +81,7 @@ dmn_regions_lab = {'Frontal_Med_Orb_L','Frontal_Med_Orb_R',...
     'Temporal_Sup_L','Temporal_Sup_R',...
     'Angular_L','Angular_R',...
     'Parietal_Inf_L','Parietal_Inf_R'};
+
 
 dan_regions_lab = {'Parietal_Sup_L','Parietal_Sup_R',...
     'Precentral_L','Precentral_R'};

@@ -33,12 +33,12 @@ dan_mask(dan_z) = [];
 nparcelsdmn = length(dmn_mask);
 nparcelsdan = length(dan_mask);
 
-%dmn_mask(1).type = "seed";
-%f1=plot_net_mask(mesh_brain,idx_select,dmn_mask);
-%dan_mask(1).type="seed";
-%f2=plot_net_mask(mesh_brain,idx_select,dan_mask);
-%dmn_mask(1).type = dmn_mask(2).type;
-%dan_mask(1).type = dan_mask(2).type;
+dmn_mask(1).type = "seed";
+f1=plot_net_mask(mesh_brain,idx_select,dmn_mask);
+dan_mask(1).type="seed";
+f2=plot_net_mask(mesh_brain,idx_select,dan_mask);
+dmn_mask(1).type = dmn_mask(2).type;
+dan_mask(1).type = dan_mask(2).type;
 
 dmn_seeds_ts = cell(length(dmn_mask),2,nSubjs);
 dan_seeds_ts = cell(length(dan_mask),2,nSubjs);
