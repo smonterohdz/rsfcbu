@@ -21,9 +21,11 @@ flags.gsr = 'image';%'none','channel' or 'image'
 flags.r_thresh = 0.7; % .r_thresh is the threshold for the clustering
 flags.plot = 0; % .plot  flag to plot the brain correlation map
 flags.p_thresh = 0; % . p_thresh is used to plot r values below that p-val (use 0 to plot all the correlations)
+flags.rho_thresh = 0; % . rho_thresh is used to plot r values above rho_thresh (use 0 to plot all the correlations)
 flags.clusteringType = 1; %0: no clustering, 1:Matlab, 2:David's algorithm
+flags.correl_type = 'Pearson'; % Type of Correlation metric, 'Pearson' or 'Spearman'
 flags.task = 'RS';
-flags.parcel_scheme = 'schaefer_comb';
+flags.parcel_scheme = 'schaefer_dmn_only';
 flags.Adot_scaling_factor = 100;
 [fwFolder,anatomFolder,derivFolder,dataDir] = setmyenv(flags);
 
@@ -38,16 +40,16 @@ f1=plot_net_mask(mesh_brain,idx_select,dmn_mask);
 dan_mask(1).type="seed";
 f2=plot_net_mask(mesh_brain,idx_select,dan_mask);
 dmn_mask(1).type = dmn_mask(2).type;
-dan_mask(1).type = dan_mask(2).type;
+dan_mask(1).type = dmn_mask(1).type;
 
 dmn_seeds_ts = cell(length(dmn_mask),2,nSubjs);
 dan_seeds_ts = cell(length(dan_mask),2,nSubjs);
 dmn_seeds_NP_ts = cell(length(dmn_mask),2,nSubjs);
 dan_seeds_NP_ts = cell(length(dan_mask),2,nSubjs);
 
-pipeline_str = sprintf('%s-macor-%s_bpfilt-%s_imrec-%s_gsr-%s_clust-%i_parcel-%s_Asf-%i',...
-    flags.task,flags.macorrect,flags.bpfilt,flags.imagerecon,flags.gsr, ...
-    flags.clusteringType,flags.parcel_scheme,flags.Adot_scaling_factor);
+pipeline_str = sprintf('%s-macor-%s_bpfilt-%s_imrec-%s_gsr-%s_clust-%i_parcel-%s_Asf-%i_CorrType-%s',...
+    flags.task,flags.macorrect,flags.bpfilt,flags.imagerecon,flags.gsr,...
+    flags.clusteringType,flags.parcel_scheme,flags.Adot_scaling_factor,flags.correl_type);
 fOut_reliability=sprintf('reliability_%s',pipeline_str);
 fOut_pmap=sprintf('probMap_%s',pipeline_str);
 pipelineDir = sprintf('%sPipeline-%s/',derivFolder,pipeline_str);
@@ -133,6 +135,7 @@ if OVERWRITE_ || ~exist([pipelineDir,fOut_reliability,'.mat'],'file')
         %%
         if flags.clusteringType > 0
             [dmn_mask_hbo] = Clustering_FC(HbO_brain_r1r2,dmn_mask,flags);
+            
             [dmn_mask_hbr] = Clustering_FC(HbR_brain_r1r2,dmn_mask,flags);
         else
             [dmn_improv_hbo{iSubj}] = dmn_mask;
@@ -141,8 +144,12 @@ if OVERWRITE_ || ~exist([pipelineDir,fOut_reliability,'.mat'],'file')
 
         %%
         if flags.clusteringType > 0
+            flags.r_thresh = 0.99;
             [dan_mask_hbo] = Clustering_FC(HbO_brain_r1r2,dan_mask,flags);
+            dan_mask_hbo.type = "seed";
+            plot_net_mask(mesh_brain,idx_select,dan_mask_hbo);
             [dan_mask_hbr] = Clustering_FC(HbR_brain_r1r2,dan_mask,flags);
+            flags.r_thresh = 0.7;
         else
             [dan_improv_hbo{iSubj}] = dan_mask;
             [dan_improv_hbr{iSubj}] = dan_mask;
@@ -158,8 +165,8 @@ if OVERWRITE_ || ~exist([pipelineDir,fOut_reliability,'.mat'],'file')
         fprintf('\n(hbo)DMN submask:');
         %BrainMaps_hbo = zeros(length(idx_select),2*(length(dmn_improv_hbo{iSubj})+length(dan_improv_hbo{iSubj})));
         for iSubmask=1:length(dmn_improv_hbo{iSubj})
-            [~,hmap1,A_select1] = CorrelationBrainMap_FC(dmn_improv_hbo{iSubj}(iSubmask),mesh_brain,idx_select,HbO_brain_chunkr1,flags.p_thresh,flags.plot);
-            [~,hmap2,A_select2] = CorrelationBrainMap_FC(dmn_improv_hbo{iSubj}(iSubmask),mesh_brain,idx_select,HbO_brain_chunkr2,flags.p_thresh,flags.plot);
+            [~,hmap1,A_select1] = CorrelationBrainMap_FC(dmn_improv_hbo{iSubj}(iSubmask),mesh_brain,idx_select,HbO_brain_chunkr1,flags);
+            [~,hmap2,A_select2] = CorrelationBrainMap_FC(dmn_improv_hbo{iSubj}(iSubmask),mesh_brain,idx_select,HbO_brain_chunkr2,flags);
             BrainMaps_hbo(:,iSubmask,iSubj) = A_select1;
             BrainMaps_hbo(:,length(dmn_improv_hbo{iSubj})+length(dan_improv_hbo{iSubj})+iSubmask,iSubj) = A_select2;
             %dmn_seeds_NP_ts{iSubmask,1,iSubj} = mean(HbO_r1r2NP(:,dmn_improv_hbo{iSubj}(iSubmask).vertices_index(dmn_improv_hbo{iSubj}(iSubmask).mask_subsetseed)),2);
@@ -168,8 +175,8 @@ if OVERWRITE_ || ~exist([pipelineDir,fOut_reliability,'.mat'],'file')
         end
         fprintf('\n(hbo)DAN submask:');
         for iSubmask=1:length(dan_improv_hbo{iSubj})
-            [~,hmap1,A_select1] = CorrelationBrainMap_FC(dan_improv_hbo{iSubj}(iSubmask),mesh_brain,idx_select,HbO_brain_chunkr1,flags.p_thresh,flags.plot);
-            [~,hmap2,A_select2] = CorrelationBrainMap_FC(dan_improv_hbo{iSubj}(iSubmask),mesh_brain,idx_select,HbO_brain_chunkr2,flags.p_thresh,flags.plot);
+            [~,hmap1,A_select1] = CorrelationBrainMap_FC(dan_improv_hbo{iSubj}(iSubmask),mesh_brain,idx_select,HbO_brain_chunkr1,flags);
+            [~,hmap2,A_select2] = CorrelationBrainMap_FC(dan_improv_hbo{iSubj}(iSubmask),mesh_brain,idx_select,HbO_brain_chunkr2,flags);
             BrainMaps_hbo(:,length(dmn_improv_hbo{iSubj})+iSubmask,iSubj) = A_select1;
             BrainMaps_hbo(:,2*length(dmn_improv_hbo{iSubj})+length(dan_improv_hbo{iSubj})+iSubmask,iSubj) = A_select2;
             %dan_seeds_NP_ts{iSubmask,1,iSubj} = mean(HbO_r1r2NP(:,dan_improv_hbo{iSubj}(iSubmask).vertices_index(dan_improv_hbo{iSubj}(iSubmask).mask_subsetseed)),2);
@@ -181,8 +188,8 @@ if OVERWRITE_ || ~exist([pipelineDir,fOut_reliability,'.mat'],'file')
         BrainMaps_hbr = zeros(length(idx_select),2*(length(dmn_improv_hbr{iSubj})+length(dan_improv_hbr{iSubj})));
         fprintf('\n(hbr)DMN submask:');
         for iSubmask=1:length(dmn_improv_hbr{iSubj})
-            [~,hmap1,A_select1] = CorrelationBrainMap_FC(dmn_improv_hbr{iSubj}(iSubmask),mesh_brain,idx_select,HbR_brain_chunkr1,flags.p_thresh,flags.plot);
-            [~,hmap2,A_select2] = CorrelationBrainMap_FC(dmn_improv_hbr{iSubj}(iSubmask),mesh_brain,idx_select,HbR_brain_chunkr2,flags.p_thresh,flags.plot);
+            [~,hmap1,A_select1] = CorrelationBrainMap_FC(dmn_improv_hbr{iSubj}(iSubmask),mesh_brain,idx_select,HbR_brain_chunkr1,flags);
+            [~,hmap2,A_select2] = CorrelationBrainMap_FC(dmn_improv_hbr{iSubj}(iSubmask),mesh_brain,idx_select,HbR_brain_chunkr2,flags);
             BrainMaps_hbr(:,iSubmask) = A_select1;
             BrainMaps_hbr(:,length(dmn_improv_hbr{iSubj})+length(dan_improv_hbr{iSubj})+iSubmask) = A_select2;
             %dmn_seeds_NP_ts{iSubmask,2,iSubj} = mean(HbR_r1r2NP(:,dmn_improv_hbr{iSubj}(iSubmask).vertices_index(dmn_improv_hbr{iSubj}(iSubmask).mask_subsetseed)),2);
@@ -192,8 +199,8 @@ if OVERWRITE_ || ~exist([pipelineDir,fOut_reliability,'.mat'],'file')
 
         fprintf('\n(hbr)DAN submask:');
         for iSubmask=1:length(dan_improv_hbr{iSubj})
-            [~,hmap1,A_select1] = CorrelationBrainMap_FC(dan_improv_hbr{iSubj}(iSubmask),mesh_brain,idx_select,HbR_brain_chunkr1,flags.p_thresh,flags.plot);
-            [~,hmap2,A_select2] = CorrelationBrainMap_FC(dan_improv_hbr{iSubj}(iSubmask),mesh_brain,idx_select,HbR_brain_chunkr2,flags.p_thresh,flags.plot);
+            [~,hmap1,A_select1] = CorrelationBrainMap_FC(dan_improv_hbr{iSubj}(iSubmask),mesh_brain,idx_select,HbR_brain_chunkr1,flags);
+            [~,hmap2,A_select2] = CorrelationBrainMap_FC(dan_improv_hbr{iSubj}(iSubmask),mesh_brain,idx_select,HbR_brain_chunkr2,flags);
             BrainMaps_hbr(:,length(dmn_improv_hbr{iSubj})+iSubmask) = A_select1;
             BrainMaps_hbr(:,2*length(dmn_improv_hbr{iSubj})+length(dan_improv_hbr{iSubj})+iSubmask) = A_select2;
             %dan_seeds_NP_ts{iSubmask,2,iSubj} = mean(HbR_r1r2NP(:,dan_improv_hbr{iSubj}(iSubmask).vertices_index(dan_improv_hbr{iSubj}(iSubmask).mask_subsetseed)),2);

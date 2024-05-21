@@ -99,7 +99,7 @@ if strcmp(flags.parcel_scheme,'schaefer')
         l = l+1;
     end
 elseif strcmp(flags.parcel_scheme,'schaefer_comb')
-    % getting unique labels RH dmn 
+    % getting unique labels RH dmn
     rhParcelsDMN_rep = cell(nParcelsDMNr,1);
     for iParcel =1:nParcelsDMNr
         pieces = strsplit(rhParcelsDMN{iParcel,1},'_');
@@ -216,5 +216,77 @@ elseif strcmp(flags.parcel_scheme,'schaefer_comb')
         dan_regions(l).net_lab = "dan";
         l = l+1;
     end
+elseif strcmp(flags.parcel_scheme,'schaefer_dmn_only')
+   % getting unique labels RH dmn
+    rhParcelsDMN_rep = cell(nParcelsDMNr,1);
+    for iParcel =1:nParcelsDMNr
+        pieces = strsplit(rhParcelsDMN{iParcel,1},'_');
+        rhParcelsDMN_rep(iParcel) = join(pieces(1:end-1),'_');
+    end
+    rhParcelsDMN_unique = unique(rhParcelsDMN_rep);
+    nParcelsDMNr_u = length(rhParcelsDMN_unique);
+    rhParcelsDMN_id = zeros(nParcelsDMNr,1);
+    for iParcel=1:nParcelsDMNr_u
+        idx = strcmp(rhParcelsDMN_rep,rhParcelsDMN_unique{iParcel});
+        rhParcelsDMN_id(idx) = iParcel;
+    end
+    % getting unique labels LH dmn
+    lhParcelsDMN_rep = cell(nParcelsDMNl,1);
+    for iParcel =1:nParcelsDMNl
+        pieces = strsplit(lhParcelsDMN{iParcel,1},'_');
+        lhParcelsDMN_rep(iParcel) = join(pieces(1:end-1),'_');
+    end
+    lhParcelsDMN_unique = unique(lhParcelsDMN_rep);
+    nParcelsDMNl_u = length(lhParcelsDMN_unique);
+    lhParcelsDMN_id = zeros(nParcelsDMNl,1);
+    for iParcel=1:nParcelsDMNl_u
+        idx = strcmp(lhParcelsDMN_rep,lhParcelsDMN_unique{iParcel});
+        lhParcelsDMN_id(idx) = iParcel;
+    end
+
+    % creating my region structure rh dmn
+    for iParcel =1:nParcelsDMNr_u
+        iParcel_idx = rhParcelsDMN_id==iParcel;
+        dmn_regions(k).name = rhParcelsDMN_unique{iParcel};
+        current_mask = [any(logical([rhParcelsDMN{iParcel_idx,2}]),2);zeros_l];
+        dmn_regions(k).vertices_index = find(current_mask(index_select));
+        if isempty(dmn_regions(k).vertices_index)
+            dmn_zero_v = [dmn_zero_v;k];
+        end
+        dmn_regions(k).vertices = brain_vertices_select(dmn_regions(k).vertices_index,:);
+        dmn_regions(k).mask_subsetseed = true(length(dmn_regions(k).vertices_index),1);
+        dmn_regions(k).type = "mask";
+        dmn_regions(k).net_lab = "dmn";
+        k = k+1;
+    end
+
+    % creating my region structure lh dmn
+    for iParcel =1:nParcelsDMNl_u
+        iParcel_idx = lhParcelsDMN_id==iParcel;
+        dmn_regions(k).name = lhParcelsDMN_unique{iParcel};
+        current_mask = [zeros_r;any(logical([lhParcelsDMN{iParcel_idx,2}]),2)];
+        dmn_regions(k).vertices_index = find(current_mask(index_select));
+        if isempty(dmn_regions(k).vertices_index)
+            dmn_zero_v = [dmn_zero_v;k];
+        end
+        dmn_regions(k).vertices = brain_vertices_select(dmn_regions(k).vertices_index,:);
+        dmn_regions(k).mask_subsetseed = true(length(dmn_regions(k).vertices_index),1);
+        dmn_regions(k).type = "mask";
+        dmn_regions(k).net_lab = "dmn";
+        k = k+1;
+    end
+    %-----------
+
+    dan_regions.name = 'not_dmn';
+    dmn_nodes_idx = [];
+    for k=1:length(dmn_regions)
+        dmn_nodes_idx = [dmn_nodes_idx;dmn_regions(k).vertices_index];
+    end
+    dan_regions.vertices_index = setdiff(1:length(brain_vertices_select),dmn_nodes_idx);
+    dan_regions.vertices = brain_vertices_select(dan_regions.vertices_index,:);
+    dan_regions.mask_subsetseed = true(length(dan_regions.vertices_index),1);
+    dan_regions.type = "mask";
+    dan_regions.net_lab = "dan";
+    dan_regions.groups = 1;
 end
 end

@@ -23,10 +23,12 @@ while (length(unique(groups))<2)
     % group the data into clusters
     % (cutoff is at a correlation of 0.5)
     groups = cluster(Z,'cutoff',cutoff,'criterion','distance');
+    %groups = cluster(Z,'maxclust',3,'criterion','distance');
     if (length(unique(groups))<2) %if there's only one group, deccrease r_threh in 10 percent
         r_thresh = r_thresh*0.9;
     end
 end
+dendrogram(Z,'ColorThreshold',cutoff);
 
 newsubmask = submask;
 newsubmask.groups = groups;
