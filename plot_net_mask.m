@@ -17,16 +17,18 @@ end
 
 
 if regions(1).type == "seed"
-    a = 40;
-    b = 90;
+    col_range = [1 100];
+
     if length(regions)==1
         if isfield(regions(1),'mask_subsetseed') && ~isempty(regions(1).mask_subsetseed)
-            A_select(regions(1).vertices_index(regions(1).mask_subsetseed)) = a.*regions.groups;
+            col_range = [1 max(regions.groups)+1];
+            A_select(regions(1).vertices_index(regions(1).mask_subsetseed)) = regions.groups(regions(1).mask_subsetseed);
         else
-            A_select(regions(1).vertices_index) = b;
+            A_select(regions(1).vertices_index) = 1;
         end
     else
-        col_range = [1 100];
+        a = 10;
+        b = 90;
         for i=1:length(regions)
             idx_val = round(a + ((i-1)*(b-a))/(length(regions)-1));
             if isfield(regions(i),'mask_subsetseed') && ~isempty(regions(i).mask_subsetseed)

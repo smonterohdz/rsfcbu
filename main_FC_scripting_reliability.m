@@ -134,6 +134,7 @@ if OVERWRITE_ || ~exist([pipelineDir,fOut_reliability,'.mat'],'file')
         [HbR_brain_r1r2] = [HbR_brain_chunkr1;HbR_brain_chunkr2];
         %%
         if flags.clusteringType > 0
+            flags.r_thresh = 0.7;
             [dmn_mask_hbo] = Clustering_FC(HbO_brain_r1r2,dmn_mask,flags);
             
             [dmn_mask_hbr] = Clustering_FC(HbR_brain_r1r2,dmn_mask,flags);
@@ -144,12 +145,15 @@ if OVERWRITE_ || ~exist([pipelineDir,fOut_reliability,'.mat'],'file')
 
         %%
         if flags.clusteringType > 0
-            flags.r_thresh = 0.99;
+            flags.r_thresh = 2;
             [dan_mask_hbo] = Clustering_FC(HbO_brain_r1r2,dan_mask,flags);
             dan_mask_hbo.type = "seed";
-            plot_net_mask(mesh_brain,idx_select,dan_mask_hbo);
+            f = plot_net_mask(mesh_brain,idx_select,dan_mask_hbo);
+            dan_mask_hbo.type = "mask";
+            saveas(f,[pipelineDir,'DAN_cluster_subj-',subject,'.png']);
+            close(f);
             [dan_mask_hbr] = Clustering_FC(HbR_brain_r1r2,dan_mask,flags);
-            flags.r_thresh = 0.7;
+            
         else
             [dan_improv_hbo{iSubj}] = dan_mask;
             [dan_improv_hbr{iSubj}] = dan_mask;
@@ -157,6 +161,11 @@ if OVERWRITE_ || ~exist([pipelineDir,fOut_reliability,'.mat'],'file')
         %%
         if flags.clusteringType > 0
             [~,dmn_improv_hbo{iSubj},dan_improv_hbo{iSubj},~] = ClusterSelection_FC(dmn_mask_hbo,dan_mask_hbo,HbO_brain_r1r2,flags);
+            dan_improv_hbo{iSubj}.type = "seed";
+            plot_net_mask(mesh_brain,idx_select,dan_improv_hbo{iSubj});
+            dan_improv_hbo{iSubj}.type = "mask";
+            saveas(f,[pipelineDir,'DAN_StarCluster_subj-',subject,'.png']);
+            close(f);
             [~,dmn_improv_hbr{iSubj},dan_improv_hbr{iSubj},~] = ClusterSelection_FC(dmn_mask_hbr,dan_mask_hbr,HbR_brain_r1r2,flags);
         end        
 

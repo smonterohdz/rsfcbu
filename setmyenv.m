@@ -1,7 +1,24 @@
 function [fwFolder,anatomFolder,derivFolder,dataDir] = setmyenv(flags)
 %Sets my environment (paths, etc.)
 %   Detailed explanation goes here
-if isunix()
+if ismac()
+    addpath('./cbrewer/');
+    if isempty(which('AtlasViewerGUI'))
+        mypwd=pwd;cd('/Volumes/rdsprojects/m/montersa-fnirs-connectivity/sw_repos/atlasviewer_smh');setpaths;cd(mypwd);
+    end 
+    if isempty(which('Homer3'))
+        mypwd=pwd;cd('/Volumes/rdsprojects/m/montersa-fnirs-connectivity/sw_repos/Homer3_smh/');setpaths;cd(mypwd);
+    end
+    if contains(flags.parcel_scheme,'aal')
+        fwFolder = '/Volumes/rdsprojects/m/montersa-fnirs-connectivity/RSFC_BU/Data/DataRSFC_Analysis/fw/';
+        anatomFolder = '/Volumes/rdsprojects/m/montersa-fnirs-connectivity/RSFC_BU/Data/DataRSFC_Analysis/probe_10MPhotons/anatomical/';
+    elseif contains(flags.parcel_scheme,'schaefer')
+        fwFolder = '/Volumes/rdsprojects/m/montersa-fnirs-connectivity/RSFC_BU/Data/DataRSFC_Analysis/colinredo/fw/';
+        anatomFolder = '/Volumes/rdsprojects/m/montersa-fnirs-connectivity/RSFC_BU/Data/DataRSFC_Analysis/colinredo/anatomical/';
+    end
+    derivFolder = '/Volumes/rdsprojects/m/montersa-fnirs-connectivity/RSFC_BU/Data/DataRSFC_Analysis/derivatives/rsfc/';
+    dataDir = '/Volumes/rdsprojects/m/montersa-fnirs-connectivity/RSFC_BU/Data/DataRSFC_Analysis/';
+elseif isunix()
     maxNumCompThreads(32);
     addpath('./cbrewer/');
     if isempty(which('AtlasViewerGUI'))

@@ -65,7 +65,7 @@ for i=1:5
 
     set(h,'diffusestrength',.9,'specularstrength',.12,'ambientstrength',.2);
     if ~isempty(color_bar_range)
-        clim(color_bar_range);
+        clim(color_bar_range-1);
         if isequal(color_bar_range,[0.9,1])
             myColorMap=cbrewer('seq','YlOrRd',9);
         elseif isequal(color_bar_range,[1 100])
@@ -80,6 +80,9 @@ for i=1:5
                 cbrewer('seq','YlOrRd',length(unique(A)))];
             myColorMap(length(unique(A)),:) = [0.95 0.95 0.95];
             myColorMap(length(unique(A))+1,:) = [0.95 0.95 0.95];
+        elseif length(color_bar_range)<=10
+            myColorMap=flipud(cbrewer('qual','Set1',max(color_bar_range)));
+            myColorMap(1,:) = [0.8,0.8,0.8];
         else
             myColorMap=flipud(cbrewer('div','RdBu',256));
         end
@@ -333,7 +336,12 @@ end
 
 %set(gcf,'position', [100 100 1000 250])
 set(gcf,'position', [100 100 1280 600])
-colorbar();
+cb=colorbar();
+if ~isempty(color_bar_range)
+    %cb.Limits = [1,color_bar_range(2)-1];
+    cb.Ticks = [0:color_bar_range(2)-1];
+    %cb.TickLabels = cellstr(num2str([1:color_bar_range(2)-1]'));
+end
 if ~isempty(seed_HbO) && ~isempty(seed_HbR)
     nexttile([2,10])
     plot(HbX_time,seed_HbO,'r-'); hold on;

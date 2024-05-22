@@ -15,21 +15,28 @@ dissimilarity = 1 - squareform(ccoefseedHb);
 
 groups = 1;
 while (length(unique(groups))<2)
-    cutoff = r_thresh*2;
 
     %# perform complete linkage clustering
     Z = linkage(dissimilarity,'complete');
 
     % group the data into clusters
     % (cutoff is at a correlation of 0.5)
-    groups = cluster(Z,'cutoff',cutoff,'criterion','distance');
-    %groups = cluster(Z,'maxclust',3,'criterion','distance');
-    if (length(unique(groups))<2) %if there's only one group, deccrease r_threh in 10 percent
+    if r_thresh < 1
+        cutoff = r_thresh*2;
+        groups = cluster(Z,'cutoff',cutoff,'criterion','distance');
+    else
+        groups = cluster(Z,'maxclust',r_thresh,'criterion','distance');
+    end
+    if (length(unique(groups))<2 && (r_thresh < 1)) %if there's only one group, deccrease r_threh in 10 percent
         r_thresh = r_thresh*0.9;
     end
 end
-dendrogram(Z,'ColorThreshold',cutoff);
 
+if r_thresh > 1
+    [cutoff,~]=maxk(Z,r_thresh-1);
+    cutoff = cutoff(end,3);
+end
+dendrogram(Z,'ColorThreshold',cutoff);
 newsubmask = submask;
 newsubmask.groups = groups;
 
